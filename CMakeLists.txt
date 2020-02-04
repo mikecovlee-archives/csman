@@ -28,11 +28,17 @@ else ()
     message(FATAL "The compiler ${CMAKE_C_COMPILER} has no C99 support. Please use a different C compiler.")
 endif ()
 
+message(STATUS ":: Including dependency: mozart++")
 add_subdirectory(third-party/mozart)
 include_directories(third-party/mozart)
 
+message(STATUS ":: Including dependency: curl")
 add_subdirectory(third-party/curl)
 include_directories(third-party/curl/include)
+
+message(STATUS ":: Including dependency: jsoncpp")
+add_subdirectory(third-party/jsoncpp)
+include_directories(third-party/jsoncpp/include)
 
 add_subdirectory(csman-core)
 add_subdirectory(csman-cli)

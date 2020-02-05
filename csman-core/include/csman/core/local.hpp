@@ -48,7 +48,7 @@ namespace csman {
             /**
              * dir containing installed versions.
              */
-             version_dir _version_dir;
+            version_dir _version_dir;
 
         private:
             void init_dir();

@@ -2,13 +2,15 @@
 // Created by kiva on 2020/2/5.
 //
 
-#include <csman/core/source.hpp>
+#include <csman/core/local.hpp>
 
 int main() {
     using namespace csman::core;
 
-    source_updater config("http://mirrors.covariant.cn/csman");
-    config.parse();
+    csman_config man("/home/kiva/csman-home");
+    man.load();
+    man.add_source("http://mirrors.covariant.cn/csman");
+    man.store();
 
     return 0;
 }

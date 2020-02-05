@@ -8,7 +8,7 @@ int main() {
     using namespace csman::core;
 
     source_updater config("http://mirrors.covariant.cn/csman");
-    config.parse();
+    config.update();
 
     return 0;
 }

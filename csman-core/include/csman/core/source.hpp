@@ -74,7 +74,11 @@ namespace csman {
             source_updater &operator=(source_updater &&) = default;
 
         public:
-            void parse();
+            void update();
+
+            const source_root_info& get_source_info() const {
+                return _info;
+            }
         };
     }
 }

@@ -172,22 +172,22 @@ namespace csman {
         using csman::os::OS;
         using mpp::path_separator;
 
-        /* csman_config */
+        /* csman_core */
 
-        void csman_config::load() {
+        void csman_core::load() {
             _source_dir.load();
         }
 
-        void csman_config::store() {
+        void csman_core::store() {
             _source_dir.store();
         }
 
-        void csman_config::init_dir() {
+        void csman_core::init_dir() {
             OS::current()->mkdir(_root_dir);
             _source_dir.init(_root_dir);
         }
 
-        void csman_config::add_source(const std::string &url) {
+        void csman_core::add_source(const std::string &url) {
             if (source_dir_impl::contains(_source_dir, url)) {
                 // do not add duplicated source
                 return;

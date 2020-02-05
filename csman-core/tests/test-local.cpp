@@ -7,7 +7,7 @@
 int main() {
     using namespace csman::core;
 
-    csman_config man("/home/kiva/csman-home");
+    csman_core man("/home/kiva/csman-home");
     man.load();
     man.add_source("http://mirrors.covariant.cn/csman");
     man.store();

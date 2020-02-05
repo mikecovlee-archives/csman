@@ -21,7 +21,7 @@ namespace csman {
             void store();
         };
 
-        class csman_config {
+        class csman_core {
         private:
             /**
              * root directory
@@ -37,20 +37,20 @@ namespace csman {
             void init_dir();
 
         public:
-            explicit csman_config(std::string local_dir)
+            explicit csman_core(std::string local_dir)
                 : _root_dir(std::move(local_dir)) {
                 init_dir();
             }
 
-            ~csman_config() = default;
+            ~csman_core() = default;
 
-            csman_config(csman_config &&) = default;
+            csman_core(csman_core &&) = default;
 
-            csman_config(const csman_config &) = default;
+            csman_core(const csman_core &) = default;
 
-            csman_config &operator=(csman_config &&) = default;
+            csman_core &operator=(csman_core &&) = default;
 
-            csman_config &operator=(const csman_config &) = default;
+            csman_core &operator=(const csman_core &) = default;
 
         public:
             const std::string &get_local_dir() const {

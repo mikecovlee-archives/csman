@@ -96,6 +96,8 @@ namespace csman {
 
             std::string get_config(const std::string &key);
 
+            std::string get_platform();
+
             void load();
 
             void store();

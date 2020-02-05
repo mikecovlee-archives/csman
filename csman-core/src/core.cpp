@@ -479,5 +479,9 @@ namespace csman {
         std::string csman_core::get_config(const std::string &key) {
             return user_config_impl::get(_user_config, key);
         }
+
+        std::string csman_core::get_platform() {
+            return get_config("platform");
+        }
     }
 }

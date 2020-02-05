@@ -74,32 +74,53 @@ namespace csman {
         //     }
         // ]
         void parse_content(source_content_info &info, Json::Value &value) {
-            if (value.empty()) {
-                throw_ex("syntax error(content): content should have "
-                         "at least one element(namely the name element)");
-            }
-
             int meta_index = -1;
 
-            if (value.size() == 1) {
-                // we assume that the only provided element is content name,
-                // so we will infer its type according to file extension.
-                info._name = value[0].asString();
-                info._type = source_content_type::UNKNOWN;
-                // no meta absolutely.
-            } else {
-                // here, the source provided at least name,
-                // and optionally type or meta
+            switch (value.size()) {
+                case 0: {
+                    throw_ex("syntax error(content): content should have "
+                             "at least one element(namely the name element)");
+                    break;
+                }
 
-                if (value[1].isObject()) {
-                    // now, the source provided name and meta
+                case 1: {
+                    // we assume that the only provided element is content name,
+                    // so we will infer its type according to file extension.
                     info._name = value[0].asString();
                     info._type = source_content_type::UNKNOWN;
-                    meta_index = 1;
-                } else {
-                    // now the source provided name and type
+                    // no meta absolutely.
+                    break;
+                }
+
+                case 2: {
+                    // here, the source provided at least name,
+                    // and optionally type or meta
+
+                    if (value[1].isObject()) {
+                        // now, the source provided name and meta
+                        info._name = value[0].asString();
+                        info._type = source_content_type::UNKNOWN;
+                        meta_index = 1;
+                    } else {
+                        // now the source provided name and type
+                        info._type = parse_type(value[0].asString());
+                        info._name = value[1].asString();
+                    }
+                    break;
+                }
+
+                case 3: {
+                    // thanks to god, the source provided all.
                     info._type = parse_type(value[0].asString());
                     info._name = value[1].asString();
+                    meta_index = 2;
+                    break;
+                }
+
+                default: {
+                    throw_ex("syntax error(content): content should have "
+                             "at most 3 elements(name, type and meta)");
+                    break;
                 }
             }
 

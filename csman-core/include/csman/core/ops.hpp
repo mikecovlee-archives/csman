@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <mozart++/optional>
 #include <csman/core/core.hpp>
 #include <mutex>
 
@@ -24,6 +25,12 @@ namespace csman {
             void check_valid_operation();
 
         protected:
+            mpp::optional<std::string> optional_platform();
+            std::string requires_platform();
+
+            mpp::optional<std::string> optional_current_version();
+            std::string requires_current_version();
+
             std::vector<query_result> query_package(const std::string &text);
 
         public:

@@ -10,6 +10,9 @@ set(CSMAN_CORE_SRC
         src/local.cpp
         src/fwd.cpp
         src/parser.cpp
+        src/op_query.cpp
+        src/ops.cpp
+        include/csman/core/ops.hpp
         include/csman/core/parser.hpp
         include/csman/core/source.hpp
         include/csman/core/network.hpp

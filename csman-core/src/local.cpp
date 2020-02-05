@@ -5,6 +5,7 @@
 #include <csman/os/os.hpp>
 #include <csman/core/local.hpp>
 #include <csman/core/parser.hpp>
+#include <csman/core/ops.hpp>
 #include <json/writer.h>
 #include <fstream>
 
@@ -383,6 +384,17 @@ namespace csman {
 
             source_dir_impl::add_source_info(_source_dir,
                 updater.get_source_info());
+        }
+
+        void csman_core::perform(operation &op, bool wait_if_running) {
+            if (op._core != nullptr && !wait_if_running) {
+                throw_ex("Operation has already got an owner");
+            }
+
+            std::lock_guard<std::mutex> guard(op._lock);
+            op._core = this;
+            op.perform();
+            op._core = nullptr;
         }
     }
 }

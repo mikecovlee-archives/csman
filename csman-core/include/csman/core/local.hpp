@@ -33,7 +33,11 @@ namespace csman {
             std::vector<local_version> _versions;
         };
 
+        class operation;
+
         class csman_core {
+            friend class operation;
+
         private:
             /**
              * root directory
@@ -79,6 +83,8 @@ namespace csman {
             void load();
 
             void store();
+
+            void perform(operation &op, bool wait_if_running = false);
         };
     }
 }

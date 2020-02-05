@@ -86,7 +86,7 @@ namespace csman {
             download_task &operator=(const download_task &) = delete;
         };
 
-        struct network {
+        struct network final {
             static bool get_url_text(string_ref url, std::string &result);
         };
     }

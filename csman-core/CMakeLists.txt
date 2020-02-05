@@ -9,7 +9,7 @@ set(CSMAN_CORE_SRC
         src/network.cpp
         include/csman/core/source.hpp
         include/csman/core/network.hpp
-        include/csman/core/fwd.hpp)
+        include/csman/core/fwd.hpp src/fwd.cpp)
 
 add_library(csman-core STATIC ${CSMAN_CORE_SRC})
 target_link_libraries(csman-core mozart++)

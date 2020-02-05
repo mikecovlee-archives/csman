@@ -7,7 +7,7 @@ include_directories(include)
 set(CSMAN_CORE_SRC
         src/source.cpp
         src/network.cpp
-        src/local.cpp
+        src/core.cpp
         src/fwd.cpp
         src/parser.cpp
         src/op_query.cpp
@@ -17,7 +17,7 @@ set(CSMAN_CORE_SRC
         include/csman/core/source.hpp
         include/csman/core/network.hpp
         include/csman/core/fwd.hpp
-        include/csman/core/local.hpp)
+        include/csman/core/core.hpp)
 
 add_library(csman-core STATIC ${CSMAN_CORE_SRC})
 target_link_libraries(csman-core csman-os)

@@ -3,7 +3,7 @@
 //
 #pragma once
 
-#include <csman/core/local.hpp>
+#include <csman/core/core.hpp>
 #include <mutex>
 
 namespace csman {

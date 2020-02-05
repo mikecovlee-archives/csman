@@ -2,7 +2,7 @@
 // Created by kiva on 2020/2/5.
 //
 
-#include <csman/core/local.hpp>
+#include <csman/core/core.hpp>
 
 int main() {
     using namespace csman::core;

@@ -3,7 +3,7 @@
 //
 
 #include <csman/os/os.hpp>
-#include <csman/core/local.hpp>
+#include <csman/core/core.hpp>
 #include <csman/core/parser.hpp>
 #include <csman/core/ops.hpp>
 #include <json/writer.h>

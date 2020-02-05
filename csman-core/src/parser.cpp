@@ -18,12 +18,15 @@ namespace csman {
         constexpr const char *KEY_BASE_URL = "BaseUrl";
         constexpr const char *KEY_PLATFORM = "Platform";
         constexpr const char *KEY_VERSION = "Version";
+        constexpr const char *KEY_VERSIONS = "Versions";
         constexpr const char *KEY_LATEST = "Latest";
         constexpr const char *KEY_NIGHTLY = "Nightly";
         constexpr const char *KEY_RTM = "RTM";
         constexpr const char *KEY_DEV = "DEV";
         constexpr const char *KEY_PKG = "PKG";
         constexpr const char *KEY_NAME = "Name";
+        constexpr const char *KEY_PNAME = "PackageName";
+        constexpr const char *KEY_PFNAME = "PackageFull";
         constexpr const char *KEY_DEPS = "Dependencies";
         constexpr const char *KEY_CONTENTS = "Contents";
 
@@ -164,13 +167,25 @@ namespace csman {
             auto &contents = value[KEY_CONTENTS];
 
             if (!contents.isArray()) {
-                throw_ex("syntax error(package: " + info._name
+                throw_ex("syntax error(package: " + info._full_name
                          + "): Contents entry should be an array");
             }
 
             // rewrite base url if source defined
             if (!value[KEY_BASE_URL].asString().empty()) {
                 info._base_url = value[KEY_BASE_URL].asString();
+            }
+
+            // rewrite package name if source defined
+            // Note: we should use KEY_PNAME because KEY_NAME is display name
+            if (!value[KEY_PNAME].asString().empty()) {
+                info._name = value[KEY_PNAME].asString();
+            }
+
+            // rewrite package full name if source defined
+            // Note: we should use KEY_PFNAME because KEY_NAME is display name
+            if (!value[KEY_PFNAME].asString().empty()) {
+                info._full_name = value[KEY_PFNAME].asString();
             }
 
             info._display_name = value[KEY_NAME].asString();
@@ -229,44 +244,78 @@ namespace csman {
                 info._base_url = value[KEY_BASE_URL].asString();
             }
 
+            // rewrite name if source defined
+            if (!value[KEY_NAME].asString().empty()) {
+                info._name = value[KEY_NAME].asString();
+            }
+
             info._package_rtm = value[KEY_RTM].asString();
             info._package_dev = value[KEY_DEV].asString();
 
-            // remove duplicated packages,
-            // so the same package will be parsed only once.
-            std::unordered_map<std::string, std::string> names;
-            names.emplace(info._package_rtm, info._package_rtm + EXTENSION_RTM);
-            names.emplace(info._package_dev, info._package_dev + EXTENSION_DEV);
-            for (auto &pkg : pkgs) {
-                auto &&name = pkg.asString();
-                names.emplace(name, name + EXTENSION_PKG);
+            // no package to parse, just return
+            if (pkgs.empty()) {
+                return;
             }
 
-            // parse it!
-            for (auto &pkg : names) {
-                // pkg.first : package name
-                // pkg.second: package full name (with extension)
+            if (pkgs[0].isObject()) {
+                // PKG contain inline package object
+                for (auto &pkg : pkgs) {
+                    source_package_info package_info{};
+                    parse_package(package_info, pkg);
+                    if (package_info._name.empty() || package_info._full_name.empty()) {
+                        throw_ex("syntax error(package): inline object should contain a package name "
+                                 "and a package full name");
+                    }
 
-                std::string package_url = info._base_url + "/" + pkg.second;
-                std::string package_info_url = package_url + "/" + INFO_FILE;
+                    // inherit base url
+                    if (package_info._base_url.empty()) {
+                        // base url should be constructed with package full name
+                        package_info._base_url = info._base_url + "/" + package_info._full_name;
+                    }
 
-                // request csman.json for every version
-                std::string package_json;
-                if (!network::get_url_text(package_info_url, package_json)) {
-                    throw_ex("Failed to get file: " + package_info_url);
+                    // package was indexed by package name (not full name or display name)
+                    info._packages.emplace(package_info._name, package_info);
+                }
+
+            } else {
+                // PKG contain only package name
+
+                // remove duplicated packages,
+                // so the same package will be parsed only once.
+                std::unordered_map<std::string, std::string> names;
+                names.emplace(info._package_rtm, info._package_rtm + EXTENSION_RTM);
+                names.emplace(info._package_dev, info._package_dev + EXTENSION_DEV);
+                for (auto &pkg : pkgs) {
+                    auto &&name = pkg.asString();
+                    names.emplace(name, name + EXTENSION_PKG);
                 }
 
                 // parse it!
-                source_package_info package_info;
-                // Inherit default base url
-                package_info._base_url = package_url;
-                package_info._name = pkg.first;
-                package_info._full_name = pkg.second;
-                parse_package(package_info, package_json);
+                for (auto &pkg : names) {
+                    // pkg.first : package name
+                    // pkg.second: package full name (with extension)
 
-                // put parsed version into platform config
-                // DO NOT use full name
-                info._packages.emplace(pkg.first, package_info);
+                    std::string package_url = info._base_url + "/" + pkg.second;
+                    std::string package_info_url = package_url + "/" + INFO_FILE;
+
+                    // request csman.json for every version
+                    std::string package_json;
+                    if (!network::get_url_text(package_info_url, package_json)) {
+                        throw_ex("Failed to get file: " + package_info_url);
+                    }
+
+                    // parse it!
+                    source_package_info package_info;
+                    // Inherit default values
+                    package_info._base_url = package_url;
+                    package_info._name = pkg.first;
+                    package_info._full_name = pkg.second;
+                    parse_package(package_info, package_json);
+
+                    // put parsed version into platform config
+                    // DO NOT use full name
+                    info._packages.emplace(pkg.first, package_info);
+                }
             }
         }
 
@@ -288,37 +337,65 @@ namespace csman {
                 info._base_url = value[KEY_BASE_URL].asString();
             }
 
+            // rewrite name if source defined
+            if (!value[KEY_NAME].asString().empty()) {
+                info._name = value[KEY_NAME].asString();
+            }
+
             info._version_default = value[KEY_VERSION].asString();
             info._version_latest = value[KEY_LATEST].asString();
             info._version_nightly = value[KEY_NIGHTLY].asString();
 
-            // remove duplicated version names,
-            // so the same version will be parsed only once.
-            std::set<std::string> names{
-                info._version_default,
-                info._version_latest,
-                info._version_nightly
-            };
+            if (value.isMember(KEY_VERSIONS)) {
+                // source has inline version list
+                auto &versions = value[KEY_VERSIONS];
+                for (auto &version : versions) {
+                    source_version_info version_info{};
+                    parse_version(version_info, version);
+                    if (version_info._name.empty()) {
+                        throw_ex("syntax error(version): inline object should contain a name");
+                    }
 
-            for (auto &name : names) {
-                std::string version_url = info._base_url + "/" + name;
-                std::string version_info_url = version_url + "/" + INFO_FILE;
+                    // inherit base url
+                    if (version_info._base_url.empty()) {
+                        version_info._base_url = info._base_url + "/" + version_info._name;
+                    }
 
-                // request csman.json for every version
-                std::string version_json;
-                if (!network::get_url_text(version_info_url, version_json)) {
-                    throw_ex("Failed to get file: " + version_info_url);
+                    // put loaded inline object
+                    info._versions.emplace(version_info._name, version_info);
                 }
 
-                // parse it!
-                source_version_info version_info;
-                // Inherit default base url
-                version_info._base_url = version_url;
-                version_info._name = name;
-                parse_version(version_info, version_json);
+            } else {
+                // source doesn't have version list
 
-                // put parsed version into platform config
-                info._versions.emplace(name, version_info);
+                // remove duplicated version names,
+                // so the same version will be parsed only once.
+                std::set<std::string> names{
+                    info._version_default,
+                    info._version_latest,
+                    info._version_nightly
+                };
+
+                for (auto &name : names) {
+                    std::string version_url = info._base_url + "/" + name;
+                    std::string version_info_url = version_url + "/" + INFO_FILE;
+
+                    // request csman.json for every version
+                    std::string version_json;
+                    if (!network::get_url_text(version_info_url, version_json)) {
+                        throw_ex("Failed to get file: " + version_info_url);
+                    }
+
+                    // parse it!
+                    source_version_info version_info;
+                    // Inherit default base url
+                    version_info._base_url = version_url;
+                    version_info._name = name;
+                    parse_version(version_info, version_json);
+
+                    // put parsed version into platform config
+                    info._versions.emplace(name, version_info);
+                }
             }
         }
 
@@ -349,7 +426,27 @@ namespace csman {
                 info._base_url = value[KEY_BASE_URL].asString();
             }
 
-            for (const auto &platform : platforms) {
+            for (auto &platform : platforms) {
+                if (platform.isObject()) {
+                    // if platform is an inline object,
+                    // just parse it!
+                    source_platform_info platform_info{};
+                    parse_platform(platform_info, platform);
+                    if (platform_info._name.empty()) {
+                        throw_ex("syntax error(platform): inline object should contain a name");
+                    }
+
+                    // inherit base url
+                    if (platform_info._base_url.empty()) {
+                        platform_info._base_url = info._base_url + "/" + platform_info._name;
+                    }
+
+                    // put loaded inline object
+                    info._platforms.emplace(platform_info._name, platform_info);
+                    continue;
+                }
+
+                // otherwise, we need to request the distributed description file
                 auto &&platform_name = platform.asString();
 
                 std::string platform_url = info._base_url + "/" + platform_name;
@@ -363,7 +460,7 @@ namespace csman {
 
                 // parse it!
                 source_platform_info platform_info;
-                // Inherit default base url
+                // Inherit default values
                 platform_info._base_url = platform_url;
                 platform_info._name = platform_name;
                 parse_platform(platform_info, platform_json);

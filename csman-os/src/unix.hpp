@@ -12,6 +12,8 @@ namespace csman {
         class os_impl_unix : public OS {
         public:
             bool mkdir(const std::string &path) override;
+
+            std::vector<file> ls(const std::string &path) override;
         };
     }
 }

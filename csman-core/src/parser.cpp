@@ -12,24 +12,6 @@ namespace csman {
     namespace core {
         using namespace Json;
 
-        constexpr const char *EXTENSION_PKG = ".cspkg";
-        constexpr const char *EXTENSION_DEV = ".csdev";
-        constexpr const char *EXTENSION_RTM = ".csrtm";
-        constexpr const char *KEY_BASE_URL = "BaseUrl";
-        constexpr const char *KEY_PLATFORM = "Platform";
-        constexpr const char *KEY_VERSION = "Version";
-        constexpr const char *KEY_VERSIONS = "Versions";
-        constexpr const char *KEY_LATEST = "Latest";
-        constexpr const char *KEY_NIGHTLY = "Nightly";
-        constexpr const char *KEY_RTM = "RTM";
-        constexpr const char *KEY_DEV = "DEV";
-        constexpr const char *KEY_PKG = "PKG";
-        constexpr const char *KEY_NAME = "Name";
-        constexpr const char *KEY_PNAME = "PackageName";
-        constexpr const char *KEY_PFNAME = "PackageFull";
-        constexpr const char *KEY_DEPS = "Dependencies";
-        constexpr const char *KEY_CONTENTS = "Contents";
-
         sp<Json::Value> load_json(const std::string &json) {
             const char *text = json.c_str();
 

@@ -7,7 +7,7 @@
 
 namespace csman {
     namespace core {
-        void source_config::parse() {
+        void source_updater::parse() {
             parse_root_url(_info, _source_url);
         }
     }

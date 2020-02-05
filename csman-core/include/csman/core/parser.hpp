@@ -27,6 +27,12 @@ namespace csman {
         constexpr const char *KEY_DEPS = "Dependencies";
         constexpr const char *KEY_CONTENTS = "Contents";
 
+        sp<Json::Value> load_json_file(const std::string &path);
+
+        sp<Json::Value> load_json_stream(std::istream &stream);
+
+        sp<Json::Value> load_json(const std::string &json);
+
         void parse_content(source_content_info &info, Json::Value &value);
 
         void parse_package(source_package_info &info, Json::Value &value);

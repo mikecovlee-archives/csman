@@ -53,25 +53,25 @@ namespace csman {
             std::unordered_map<std::string, source_platform_info> _platforms;
         };
 
-        class source_config final {
+        class source_updater final {
         private:
             std::string _source_url;
             source_root_info _info;
 
         public:
-            explicit source_config(std::string url)
+            explicit source_updater(std::string url)
                 : _source_url(std::move(url)) {
             }
 
-            ~source_config() = default;
+            ~source_updater() = default;
 
-            source_config(const source_config &) = default;
+            source_updater(const source_updater &) = default;
 
-            source_config(source_config &&) = default;
+            source_updater(source_updater &&) = default;
 
-            source_config &operator=(const source_config &) = default;
+            source_updater &operator=(const source_updater &) = default;
 
-            source_config &operator=(source_config &&) = default;
+            source_updater &operator=(source_updater &&) = default;
 
         public:
             void parse();

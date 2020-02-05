@@ -4,6 +4,7 @@
 
 #include <set>
 
+#include <fstream>
 #include <csman/core/source.hpp>
 #include <csman/core/network.hpp>
 #include <csman/core/parser.hpp>
@@ -11,6 +12,26 @@
 namespace csman {
     namespace core {
         using namespace Json;
+
+        sp<Json::Value> load_json_file(const std::string &path) {
+            std::ifstream stream(path, std::ios::in);
+            if (!stream.good()) {
+                throw_ex("Failed to open file: " + path);
+            }
+
+            return load_json_stream(stream);
+        }
+
+        sp<Json::Value> load_json_stream(std::istream &stream) {
+            sp<Json::Value> value = make_shared<Json::Value>();
+            Json::CharReaderBuilder builder;
+            std::string errs;
+            if (!parseFromStream(builder, stream, value.get(), &errs)) {
+                throw_ex("Failed to load json: " + errs);
+            }
+
+            return value;
+        }
 
         sp<Json::Value> load_json(const std::string &json) {
             const char *text = json.c_str();

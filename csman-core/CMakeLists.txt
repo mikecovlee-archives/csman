@@ -7,9 +7,14 @@ include_directories(include)
 set(CSMAN_CORE_SRC
         src/source.cpp
         src/network.cpp
+        src/local.cpp
+        src/fwd.cpp
+        src/parser.cpp
+        include/csman/core/parser.hpp
         include/csman/core/source.hpp
         include/csman/core/network.hpp
-        include/csman/core/fwd.hpp src/fwd.cpp)
+        include/csman/core/fwd.hpp
+        include/csman/core/local.hpp)
 
 add_library(csman-core STATIC ${CSMAN_CORE_SRC})
 target_link_libraries(csman-core mozart++)

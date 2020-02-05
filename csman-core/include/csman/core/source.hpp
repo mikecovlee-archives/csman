@@ -11,11 +11,6 @@
 
 namespace csman {
     namespace core {
-        static constexpr const char *INFO_FILE = "csman.json";
-        static constexpr const char *EXTENSION_PKG = ".cspkg";
-        static constexpr const char *EXTENSION_DEV = ".csdev";
-        static constexpr const char *EXTENSION_RTM = ".csrtm";
-
         enum class source_content_type {
             UNKNOWN, BIN, CSE, ZIP,
         };

@@ -42,12 +42,16 @@ namespace csman {
         }
 
         source_content_type parse_type(string_ref type) {
-            if (type.equals("ZIP")) {
+            if (type.equals_ignore_case("ZIP")) {
                 return source_content_type::ZIP;
-            } else if (type.equals("CSE")) {
+            } else if (type.equals_ignore_case("CSE")) {
                 return source_content_type::CSE;
+            } else if (type.equals_ignore_case("CSP")) {
+                return source_content_type::CSP;
             } else if (type.equals_ignore_case("BIN")) {
                 return source_content_type::BIN;
+            } else if (type.equals_ignore_case("DLL")) {
+                return source_content_type ::DLL;
             }
 
             return source_content_type::UNKNOWN;

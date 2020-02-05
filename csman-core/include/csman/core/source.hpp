@@ -12,7 +12,7 @@
 namespace csman {
     namespace core {
         enum class source_content_type {
-            UNKNOWN, BIN, CSE, ZIP,
+            UNKNOWN, BIN, DLL, CSE, CSP, ZIP,
         };
 
         struct source_content_info final {

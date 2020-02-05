@@ -33,6 +33,8 @@ namespace csman {
 
         sp<Json::Value> load_json(const std::string &json);
 
+        void save_json_stream(std::ostream &stream, Json::Value &value);
+
         void parse_content(source_content_info &info, Json::Value &value);
 
         void parse_package(source_package_info &info, Json::Value &value);

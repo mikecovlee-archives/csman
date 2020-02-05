@@ -33,6 +33,11 @@ namespace csman {
             std::vector<local_version> _versions;
         };
 
+        struct user_config {
+            std::string _path;
+            std::unordered_map<std::string, std::string> _config;
+        };
+
         class operation;
 
         class csman_core {
@@ -54,13 +59,18 @@ namespace csman {
              */
             version_dir _version_dir;
 
+            /**
+             * user config file
+             */
+            user_config _user_config;
+
         private:
-            void init_dir();
+            void init();
 
         public:
             explicit csman_core(std::string local_dir)
                 : _root_dir(std::move(local_dir)) {
-                init_dir();
+                init();
             }
 
             ~csman_core() = default;
@@ -79,6 +89,12 @@ namespace csman {
             }
 
             void add_source(const std::string &url);
+
+            void set_config(const std::string &key, const std::string &value);
+
+            void unset_config(const std::string &key);
+
+            std::string get_config(const std::string &key);
 
             void load();
 

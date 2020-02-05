@@ -8,6 +8,7 @@
 #include <csman/core/source.hpp>
 #include <csman/core/network.hpp>
 #include <csman/core/parser.hpp>
+#include <json/writer.h>
 
 namespace csman {
     namespace core {
@@ -45,6 +46,11 @@ namespace csman {
             }
 
             return value;
+        }
+
+        void save_json_stream(std::ostream &stream, Json::Value &value) {
+            sp<Json::StreamWriter> writer(Json::StreamWriterBuilder().newStreamWriter());
+            writer->write(value, &stream);
         }
 
         source_content_type parse_type(string_ref type) {

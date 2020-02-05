@@ -164,8 +164,7 @@ namespace source_dir_impl {
             throw_ex("Failed to open source cache file: %s\n" + source_cache_file);
         }
 
-        sp<Json::StreamWriter> writer(Json::StreamWriterBuilder().newStreamWriter());
-        writer->write(root, &stream);
+        save_json_stream(stream, root);
     }
 
     bool contains(source_dir &dir, const std::string &url) {
@@ -230,7 +229,6 @@ namespace local_package_impl {
     }
 
     void store(local_package &lp) {
-        std::string info_file = lp._path + path_separator + PKG_FILE;
         Json::Value root;
         root[KEY_INFO] = jsonify(lp._info);
 
@@ -239,6 +237,15 @@ namespace local_package_impl {
         for (auto &f : lp._files) {
             files[i++] = f;
         }
+
+        std::string info_file = lp._path + path_separator + PKG_FILE;
+        std::fstream stream(info_file, std::ios::out);
+
+        if (!stream.good()) {
+            throw_ex("Failed to open package info file: " + info_file);
+        }
+
+        save_json_stream(stream, root);
     }
 }
 
@@ -350,6 +357,67 @@ namespace version_dir_impl {
     }
 }
 
+namespace user_config_impl {
+    using namespace csman::core;
+    using namespace csman::os;
+    using mpp::path_separator;
+
+    // <root-dir>/config.json
+    // {
+    //    "key": value,
+    //    ...
+    // }
+    constexpr const char * CONFIG_FILE = "config.json";
+
+    void init(user_config &uc, const std::string &path) {
+        uc._path = path + path_separator + CONFIG_FILE;
+    }
+
+    void load(user_config &uc) {
+        std::fstream stream(uc._path, std::ios::in);
+        if (!stream.good()) {
+            // no user config
+            return;
+        }
+
+        sp<Json::Value> root = load_json_stream(stream);
+        for (auto &name : root->getMemberNames()) {
+            uc._config.emplace(name, (*root)[name].asString());
+        }
+    }
+
+    void store(user_config &uc) {
+        Json::Value root;
+        for (auto &c : uc._config) {
+            root[c.first] = c.second;
+        }
+
+        std::fstream stream(uc._path, std::ios::out);
+
+        if (!stream.good()) {
+            throw_ex("Failed to open user config file: " + uc._path);
+        }
+
+        save_json_stream(stream, root);
+    }
+
+    void set(user_config &uc, const std::string &key, const std::string &value) {
+        uc._config[key] = value;
+    }
+
+    void unset(user_config &uc, const std::string &key) {
+        uc._config.erase(key);
+    }
+
+    std::string get(user_config &uc, const std::string &key) {
+        auto it = uc._config.find(key);
+        if (it == uc._config.end()) {
+            return "";
+        }
+        return it->second;
+    }
+}
+
 namespace csman {
     namespace core {
         using namespace csman::os;
@@ -360,17 +428,20 @@ namespace csman {
         void csman_core::load() {
             source_dir_impl::load(_source_dir);
             version_dir_impl::load(_version_dir);
+            user_config_impl::load(_user_config);
         }
 
         void csman_core::store() {
             source_dir_impl::store(_source_dir);
             version_dir_impl::store(_version_dir);
+            user_config_impl::store(_user_config);
         }
 
-        void csman_core::init_dir() {
+        void csman_core::init() {
             OS::current()->mkdir(_root_dir);
             source_dir_impl::init(_source_dir, _root_dir);
             version_dir_impl::init(_version_dir, _root_dir);
+            user_config_impl::init(_user_config, _root_dir);
         }
 
         void csman_core::add_source(const std::string &url) {
@@ -395,6 +466,18 @@ namespace csman {
             op._core = this;
             op.perform();
             op._core = nullptr;
+        }
+
+        void csman_core::set_config(const std::string &key, const std::string &value) {
+            user_config_impl::set(_user_config, key, value);
+        }
+
+        void csman_core::unset_config(const std::string &key) {
+            user_config_impl::unset(_user_config, key);
+        }
+
+        std::string csman_core::get_config(const std::string &key) {
+            return user_config_impl::get(_user_config, key);
         }
     }
 }

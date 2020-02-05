@@ -5,7 +5,7 @@ include_directories(include)
 
 #### sources
 set(CSMAN_CLI_SRC
-        include/network.hpp
+        include/dummy.hpp
         src/dummy.cpp)
 
 add_executable(csman ${CSMAN_CLI_SRC})

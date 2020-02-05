@@ -17,6 +17,7 @@ set(CSMAN_CORE_SRC
         include/csman/core/local.hpp)
 
 add_library(csman-core STATIC ${CSMAN_CORE_SRC})
+target_link_libraries(csman-core csman-os)
 target_link_libraries(csman-core mozart++)
 target_link_libraries(csman-core libcurl)
 target_link_libraries(csman-core jsoncpp_lib)

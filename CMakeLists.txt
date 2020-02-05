@@ -40,6 +40,12 @@ message(STATUS ":: Including dependency: jsoncpp")
 add_subdirectory(third-party/jsoncpp)
 include_directories(third-party/jsoncpp/include)
 
+add_subdirectory(csman-os)
+include_directories(csman-os/include)
+
 add_subdirectory(csman-core)
+include_directories(csman-core/include)
+
 add_subdirectory(csman-cli)
+include_directories(csman-cli/include)
 

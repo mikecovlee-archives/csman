@@ -9,6 +9,8 @@
 
 namespace csman {
     namespace core {
+        constexpr const char *INFO_FILE = "csman.json";
+
         using mpp::string_ref;
 
         template <typename T>

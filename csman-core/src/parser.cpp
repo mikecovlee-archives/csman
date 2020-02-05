@@ -12,7 +12,6 @@ namespace csman {
     namespace core {
         using namespace Json;
 
-        constexpr const char *INFO_FILE = "csman.json";
         constexpr const char *EXTENSION_PKG = ".cspkg";
         constexpr const char *EXTENSION_DEV = ".csdev";
         constexpr const char *EXTENSION_RTM = ".csrtm";

@@ -6,6 +6,7 @@
 #include <csman/core/fwd.hpp>
 #include <csman/core/source.hpp>
 #include <vector>
+#include <unordered_map>
 #include <utility>
 
 namespace csman {
@@ -13,12 +14,23 @@ namespace csman {
         struct source_dir {
             std::string _path;
             std::vector<source_root_info> _sources;
+        };
 
-            void init(const std::string &root_dir);
+        struct local_package {
+            std::string _path;
+            source_package_info _info;
+            std::vector<std::string> _files;
+        };
 
-            void load();
+        struct local_version {
+            std::string _path;
+            std::string _name;
+            std::unordered_map<std::string, local_package> _packages;
+        };
 
-            void store();
+        struct version_dir {
+            std::string _path;
+            std::vector<local_version> _versions;
         };
 
         class csman_core {
@@ -32,6 +44,11 @@ namespace csman {
              * dir containing source lists.
              */
             source_dir _source_dir;
+
+            /**
+             * dir containing installed versions.
+             */
+             version_dir _version_dir;
 
         private:
             void init_dir();

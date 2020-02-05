@@ -8,39 +8,8 @@
 #include <json/writer.h>
 #include <fstream>
 
-namespace source_dir_impl {
+namespace {
     using namespace csman::core;
-    using mpp::path_separator;
-
-    // {
-    //     "source-url": { source-object },
-    //     ...
-    // }
-    constexpr const char *SOURCE_CACHE_FILE = "sources.json";
-
-    void load(source_dir &dir) {
-        std::string source_cache_file = dir._path + path_separator + SOURCE_CACHE_FILE;
-        std::fstream stream(source_cache_file, std::ios::in);
-
-        if (!stream.good()) {
-            // maybe first run, just return
-            return;
-        }
-
-        sp<Json::Value> root = load_json_stream(stream);
-        auto &sources = *root;
-
-        if (!sources.isObject()) {
-            throw_ex("syntax error(source list): source entry should be an object");
-        }
-
-        for (auto &source_url : sources.getMemberNames()) {
-            auto &source_object = sources[source_url];
-            source_root_info info;
-            parse_root(info, source_object);
-            dir._sources.push_back(info);
-        }
-    }
 
     std::string jsonify(source_content_type type) {
         switch (type) {
@@ -135,6 +104,51 @@ namespace source_dir_impl {
         }
         return std::move(node);
     }
+}
+
+/*
+ * hiding all details for PODs.
+ */
+
+namespace source_dir_impl {
+    using namespace csman::core;
+    using namespace csman::os;
+    using mpp::path_separator;
+
+    // {
+    //     "source-url": { source-object },
+    //     ...
+    // }
+    constexpr const char *SOURCE_CACHE_FILE = "sources.json";
+
+    void init(source_dir &dir, const std::string &root_dir) {
+        dir._path = root_dir + path_separator + "sources";
+        OS::current()->mkdir(dir._path);
+    }
+
+    void load(source_dir &dir) {
+        std::string source_cache_file = dir._path + path_separator + SOURCE_CACHE_FILE;
+        std::fstream stream(source_cache_file, std::ios::in);
+
+        if (!stream.good()) {
+            // maybe first run, just return
+            return;
+        }
+
+        sp<Json::Value> root = load_json_stream(stream);
+        auto &sources = *root;
+
+        if (!sources.isObject()) {
+            throw_ex("syntax error(source list): source entry should be an object");
+        }
+
+        for (auto &source_url : sources.getMemberNames()) {
+            auto &source_object = sources[source_url];
+            source_root_info info;
+            parse_root(info, source_object);
+            dir._sources.push_back(info);
+        }
+    }
 
     void store(source_dir &dir) {
         Json::Value root;
@@ -167,24 +181,195 @@ namespace source_dir_impl {
     }
 }
 
+namespace local_package_impl {
+    using namespace csman::core;
+    using namespace csman::os;
+    using mpp::path_separator;
+
+    // <root-dir>/versions/<version-name>/packages/<package-name>/info.json
+    // {
+    //     "info": { source_package_info },
+    //     "files": [ "bin/cs", "bin/cs_dbg", ... ]
+    // }
+    constexpr const char *PKG_FILE = "info.json";
+
+    constexpr const char *KEY_INFO = "info";
+    constexpr const char *KEY_FILES = "files";
+
+    void init(local_package &lp, const std::string &path) {
+        lp._path = path;
+    }
+
+    void load(local_package &lp) {
+        std::string info_file = lp._path + path_separator + PKG_FILE;
+        std::fstream stream(info_file, std::ios::in);
+
+        if (!stream.good()) {
+            // invalid package, just return
+            return;
+        }
+
+        sp<Json::Value> root = load_json_stream(stream);
+        auto &value = *root;
+        auto &info = value[KEY_INFO];
+        auto &files = value[KEY_FILES];
+
+        if (!info.isObject() || !files.isArray()) {
+            // invalid package, just return
+            return;
+        }
+
+        // parse package info from source
+        parse_package(lp._info, info);
+
+        // parse local file list
+        for (auto &f : files) {
+            lp._files.push_back(f.asString());
+        }
+    }
+
+    void store(local_package &lp) {
+        std::string info_file = lp._path + path_separator + PKG_FILE;
+        Json::Value root;
+        root[KEY_INFO] = jsonify(lp._info);
+
+        auto &files = root[KEY_FILES];
+        int i = 0;
+        for (auto &f : lp._files) {
+            files[i++] = f;
+        }
+    }
+}
+
+namespace local_version_impl {
+    using namespace csman::core;
+    using namespace csman::os;
+    using mpp::path_separator;
+
+    // <root-dir>/versions/<version-name>/bin
+    constexpr const char *BIN_DIR = "bin";
+
+    // <root-dir>/versions/<version-name>/lib
+    constexpr const char *LIB_DIR = "lib";
+
+    // <root-dir>/versions/<version-name>/include
+    constexpr const char *INCLUDE_DIR = "include";
+
+    // <root-dir>/versions/<version-name>/imports
+    constexpr const char *IMPORTS_DIR = "imports";
+
+    // <root-dir>/versions/<version-name>/packages
+    constexpr const char *PKG_DIR = "packages";
+
+    void init(local_version &lv, const std::string &name,
+              const std::string &path) {
+        lv._name = name;
+        lv._path = path;
+
+        std::string packages_dir = lv._path + path_separator + PKG_DIR;
+
+        for (auto &pkg : OS::current()->ls(packages_dir)) {
+            if (pkg._type != file_type::DIR) {
+                // skip non-directories
+                continue;
+            }
+            std::string package_dir = packages_dir + path_separator + pkg._name;
+            local_package lp;
+            local_package_impl::init(lp, package_dir);
+            lv._packages.emplace(pkg._name, lp);
+        }
+    }
+
+    void load(local_version &lv) {
+        std::unordered_map<std::string, local_package> checked;
+        for (auto &lp : lv._packages) {
+            local_package_impl::load(lp.second);
+            if (lp.second._info._name.empty()
+                || lp.second._info._full_name.empty()
+                || lp.first != lp.second._info._name) {
+                // skip invalid local package
+                continue;
+            }
+
+            checked.emplace(lp.first, lp.second);
+        }
+
+        lv._packages = std::move(checked);
+    }
+
+    void store(local_version &lv) {
+        for (auto &lp : lv._packages) {
+            local_package_impl::store(lp.second);
+        }
+    }
+}
+
+namespace version_dir_impl {
+    using namespace csman::core;
+    using namespace csman::os;
+    using mpp::path_separator;
+
+    // <root-dir>/versions/current
+    // always symbolically linked to the version in use
+    constexpr const char *CURRENT_DIR = "current";
+
+    void init(version_dir &dir, const std::string &root_dir) {
+        dir._path = root_dir + path_separator + "versions";
+        OS::current()->mkdir(dir._path);
+
+        // scan versions directory
+        for (auto &version : OS::current()->ls(dir._path)) {
+            if (version._type != file_type::DIR) {
+                // skip non-directories
+                continue;
+            }
+
+            if (version._name == CURRENT_DIR) {
+                // skip "versions/current"
+                continue;
+            }
+
+            local_version lv;
+            local_version_impl::init(lv, version._name,
+                dir._path + path_separator + version._name);
+            dir._versions.push_back(lv);
+        }
+    }
+
+    void load(version_dir &dir) {
+        for (auto &lv : dir._versions) {
+            local_version_impl::load(lv);
+        }
+    }
+
+    void store(version_dir &dir) {
+        for (auto &lv : dir._versions) {
+            local_version_impl::store(lv);
+        }
+    }
+}
+
 namespace csman {
     namespace core {
-        using csman::os::OS;
+        using namespace csman::os;
         using mpp::path_separator;
 
         /* csman_core */
 
         void csman_core::load() {
-            _source_dir.load();
+            source_dir_impl::load(_source_dir);
+            version_dir_impl::load(_version_dir);
         }
 
         void csman_core::store() {
-            _source_dir.store();
+            source_dir_impl::store(_source_dir);
+            version_dir_impl::store(_version_dir);
         }
 
         void csman_core::init_dir() {
             OS::current()->mkdir(_root_dir);
-            _source_dir.init(_root_dir);
+            source_dir_impl::init(_source_dir, _root_dir);
+            version_dir_impl::init(_version_dir, _root_dir);
         }
 
         void csman_core::add_source(const std::string &url) {
@@ -198,21 +383,6 @@ namespace csman {
 
             source_dir_impl::add_source_info(_source_dir,
                 updater.get_source_info());
-        }
-
-        /* source_dir */
-
-        void source_dir::init(const std::string &root_dir) {
-            _path = root_dir + path_separator + "sources";
-            OS::current()->mkdir(_path);
-        }
-
-        void source_dir::load() {
-            source_dir_impl::load(*this);
-        }
-
-        void source_dir::store() {
-            source_dir_impl::store(*this);
         }
     }
 }

@@ -18,6 +18,7 @@ namespace csman {
 
         struct local_package {
             std::string _path;
+            std::string _owner_version;
             source_package_info _info;
             std::vector<std::string> _files;
         };

@@ -197,8 +197,9 @@ namespace local_package_impl {
     constexpr const char *KEY_INFO = "info";
     constexpr const char *KEY_FILES = "files";
 
-    void init(local_package &lp, const std::string &path) {
+    void init(local_package &lp, const std::string &path, const std::string &owner_version) {
         lp._path = path;
+        lp._owner_version = owner_version;
     }
 
     void load(local_package &lp) {
@@ -284,7 +285,7 @@ namespace local_version_impl {
             }
             std::string package_dir = packages_dir + path_separator + pkg._name;
             local_package lp;
-            local_package_impl::init(lp, package_dir);
+            local_package_impl::init(lp, package_dir, lv._name);
             lv._packages.emplace(pkg._name, lp);
         }
     }

@@ -11,6 +11,8 @@ set(CSMAN_CORE_SRC
         src/fwd.cpp
         src/parser.cpp
         src/ops.cpp
+        src/install.cpp
+        src/query.cpp
         include/csman/core/ops.hpp
         include/csman/core/parser.hpp
         include/csman/core/source.hpp

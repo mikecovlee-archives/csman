@@ -4,6 +4,7 @@
 #pragma once
 
 #include <mozart++/optional>
+#include <mozart++/event>
 #include <csman/core/core.hpp>
 #include <mutex>
 
@@ -48,6 +49,13 @@ namespace csman {
             std::vector<local_package> query_installed_package(const std::string &version,
                                                                const std::string &text);
             std::vector<local_version> query_installed_version(const std::string &text);
+
+            void checkout_version(mpp::event_emitter &ev, local_version &version);
+            void remove_version(mpp::event_emitter &ev, local_version &version);
+            void install_version(mpp::event_emitter &ev, source_version &version);
+
+            void remove_package(mpp::event_emitter &ev, local_package &pkg);
+            void install_package(mpp::event_emitter &ev, source_package &pkg);
 
         public:
             virtual ~operation() = default;

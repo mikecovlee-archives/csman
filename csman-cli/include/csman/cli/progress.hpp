@@ -13,6 +13,7 @@ namespace csman {
         private:
             std::unique_ptr<std::thread> _thread{nullptr};
             std::atomic_bool _draw{true};
+            std::atomic_bool _status{true};
             std::atomic_int _progress{0};
             int _width = 0;
 
@@ -23,7 +24,7 @@ namespace csman {
 
             void start();
 
-            void stop();
+            void stop(bool status);
 
             void tick(int progress) {
                 this->_progress = progress;

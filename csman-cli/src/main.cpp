@@ -19,12 +19,11 @@ int main(int argc, const char **argv) {
     ev.on("as-progress", [&](int progress) {
         bar.tick(progress);
     });
-    ev.on("as-error",[](const std::string &reason) {
-        printf(":: Failed\n%s\n", reason.c_str());
+    ev.on("as-error",[&](const std::string &reason) {
+        bar.stop(false);
     });
     ev.on("as-ok", [&]() {
-        bar.tick(100);
-        bar.stop();
+        bar.stop(true);
         man.store();
     });
 

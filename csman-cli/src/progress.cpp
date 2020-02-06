@@ -69,17 +69,18 @@ namespace csman {
                     }
 
                     os->rewind_cursor();
-                    printf("  ✔︎\n");
+                    printf("  %s\n", bar._status ? "✔︎" : "🔨");
                     fflush(stdout);
                 },
                 std::ref(*this));
         }
 
         progress_bar::~progress_bar() {
-            stop();
+            stop(true);
         }
 
-        void progress_bar::stop() {
+        void progress_bar::stop(bool status) {
+            this->_status = status;
             this->_draw = false;
             if (_thread != nullptr && _thread->joinable()) {
                 _thread->join();

@@ -91,6 +91,7 @@ namespace csman {
             }
 
             /**
+             * TODO: move to operation class
              * Event:
              *   as-progress(int progress)
              *   as-error(const std::string &reason)

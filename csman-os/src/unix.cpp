@@ -31,6 +31,10 @@ namespace csman {
             closedir(dp);
             return std::move(files);
         }
+
+        void os_impl_unix::rewind_cursor() {
+            putchar('\r');
+        }
     }
 }
 

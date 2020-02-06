@@ -14,6 +14,8 @@ namespace csman {
             bool mkdir(const std::string &path) override;
 
             std::vector<file> ls(const std::string &path) override;
+
+            void rewind_cursor() override;
         };
     }
 }

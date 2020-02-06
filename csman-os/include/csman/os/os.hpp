@@ -30,6 +30,8 @@ namespace csman {
             virtual bool mkdir(const std::string &path) = 0;
 
             virtual std::vector<file> ls(const std::string &path) = 0;
+
+            virtual void rewind_cursor() = 0;
         };
     }
 }

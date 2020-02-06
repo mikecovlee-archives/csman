@@ -15,6 +15,7 @@ namespace csman {
 
         struct source_package {
             int _match_rate;
+            std::string _owner_version;
             source_package_info _package;
         };
 
@@ -49,10 +50,9 @@ namespace csman {
             std::vector<local_version> query_installed_version(const std::string &text);
 
         public:
+            virtual ~operation() = default;
             virtual void perform() = 0;
         };
-
-
     }
 }
 

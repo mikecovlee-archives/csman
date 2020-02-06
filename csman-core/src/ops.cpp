@@ -174,6 +174,7 @@ namespace csman {
                         auto &info = pkg.second;
                         if (package_matches(text, info._name, info._display_name, &rate)) {
                             source_package r;
+                            r._owner_version = ver.first;
                             r._package = pkg.second;
                             r._match_rate = rate;
                             result.push_back(r);

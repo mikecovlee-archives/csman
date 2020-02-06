@@ -23,9 +23,7 @@ namespace csman {
 
             void start();
 
-            void stop() {
-                this->_draw = false;
-            }
+            void stop();
 
             void tick(int progress) {
                 this->_progress = progress;

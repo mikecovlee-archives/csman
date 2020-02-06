@@ -27,6 +27,13 @@ namespace csman {
                             index = 0;
                         }
 
+                        if (progress > 100) {
+                            bar._progress = 0;
+                            progress = 0;
+                            os->rewind_cursor();
+                            printf("  ✔︎\n");
+                        }
+
                         printf("  %c  %3d%% ", C[index++ % sizeof(C)], progress);
 
                         int complete = width * progress / 100;
@@ -58,17 +65,22 @@ namespace csman {
                         // display it!
                         os->rewind_cursor();
                         fflush(stdout);
-                        std::this_thread::sleep_for(std::chrono::milliseconds (100));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     }
 
                     os->rewind_cursor();
                     printf("  ✔︎\n");
+                    fflush(stdout);
                 },
                 std::ref(*this));
         }
 
         progress_bar::~progress_bar() {
             stop();
+        }
+
+        void progress_bar::stop() {
+            this->_draw = false;
             if (_thread != nullptr && _thread->joinable()) {
                 _thread->join();
             }

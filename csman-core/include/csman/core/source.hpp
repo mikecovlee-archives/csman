@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <mozart++/event>
 
 namespace csman {
     namespace core {
@@ -53,17 +54,26 @@ namespace csman {
             std::unordered_map<std::string, source_platform_info> _platforms;
         };
 
-        class source_updater final {
+        /**
+         * Event:
+         *   su-progress(int progress)
+         *   su-error(const std::string &reason)
+         *   su-ok(const source_root_info &info)
+         */
+        class source_updater final : public mpp::event_emitter {
         private:
             std::string _source_url;
-            source_root_info _info;
 
         public:
             explicit source_updater(std::string url)
                 : _source_url(std::move(url)) {
+                // forward net-progress from network to su-progress
+                this->on("net-progress", [this](int progress) {
+                    this->emit("su-progress", progress);
+                });
             }
 
-            ~source_updater() = default;
+            ~source_updater() override = default;
 
             source_updater(const source_updater &) = default;
 
@@ -75,10 +85,6 @@ namespace csman {
 
         public:
             void update();
-
-            const source_root_info& get_source_info() const {
-                return _info;
-            }
         };
     }
 }

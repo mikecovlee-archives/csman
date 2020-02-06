@@ -52,7 +52,5 @@ namespace csman {
         void parse_platform(source_platform_info &info, const std::string &json);
 
         void parse_root(source_root_info &info, const std::string &json);
-
-        void parse_root_url(source_root_info &info, const std::string &url);
     }
 }

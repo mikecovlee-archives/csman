@@ -486,17 +486,25 @@ namespace csman {
             user_config_impl::init(_user_config, _root_dir);
         }
 
-        void csman_core::add_source(const std::string &url) {
+        void csman_core::add_source(mpp::event_emitter &ev, const std::string &url) {
             if (source_dir_impl::contains(_source_dir, url)) {
                 // do not add duplicated source
                 return;
             }
 
             source_updater updater(url);
-            updater.update();
+            updater.on("su-ok", [&](const source_root_info &info) {
+                source_dir_impl::add_source_info(_source_dir, info);
+                ev.emit("as-ok");
+            });
+            updater.on("su-error", [&](const std::string &reason) {
+                ev.emit("as-error", reason);
+            });
+            updater.on("su-progress", [&](int progress) {
+                ev.emit("as-progress", progress);
+            });
 
-            source_dir_impl::add_source_info(_source_dir,
-                updater.get_source_info());
+            updater.update();
         }
 
         void csman_core::perform(operation &op, bool wait_if_running) {

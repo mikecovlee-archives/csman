@@ -41,7 +41,7 @@ namespace csman {
         /**
          * Events:
          *     start();
-         *     progress(double total, double wrote);
+         *     progress(int progress);
          *     write(T *buffer, const char *data, size_t size, size_t nmemb, size_t *wrote);
          *     ok(T *buffer);
          *     error(const std::string &reason);
@@ -62,6 +62,10 @@ namespace csman {
                 this->on("internal-write", [this](const char *data, size_t size,
                                                   size_t nmemb, size_t *wrote) {
                     this->emit("write", &_buffer, data, size, nmemb, wrote);
+                });
+
+                this->on("internal-progress", [this](double total, double wrote) {
+                    this->emit("progress", static_cast<int>(wrote / total * 100));
                 });
             }
 
@@ -87,7 +91,12 @@ namespace csman {
         };
 
         struct network final {
-            static bool get_url_text(string_ref url, std::string &result);
+            /**
+             * Event:
+             *     net-progress(int progress)
+             */
+            static bool get_url_text(string_ref url, std::string &result,
+                                     mpp::event_emitter *ev = nullptr);
         };
     }
 }

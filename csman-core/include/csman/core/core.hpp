@@ -90,7 +90,13 @@ namespace csman {
                 return _root_dir;
             }
 
-            void add_source(const std::string &url);
+            /**
+             * Event:
+             *   as-progress(int progress)
+             *   as-error(const std::string &reason)
+             *   as-ok()
+             */
+            void add_source(mpp::event_emitter &ev, const std::string &url);
 
             void set_config(const std::string &key, const std::string &value);
 

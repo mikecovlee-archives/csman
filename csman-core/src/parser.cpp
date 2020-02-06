@@ -484,20 +484,5 @@ namespace csman {
             auto &value = *root.get();
             parse_root(info, value);
         }
-
-        void parse_root_url(source_root_info &info, const std::string &url) {
-            std::string json;
-            std::string root_info_url = url + "/" + INFO_FILE;
-
-            if (!network::get_url_text(root_info_url, json)) {
-                throw_ex("Failed to get file: " + root_info_url
-                         + ": " + json);
-            }
-
-            // Inherit base url from parent.
-            // For root config, the parent is user.
-            info._base_url = url;
-            parse_root(info, json);
-        }
     }
 }

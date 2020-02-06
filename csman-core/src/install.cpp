@@ -7,7 +7,6 @@
 namespace csman {
     namespace core {
         void operation::checkout_version(mpp::event_emitter &ev, local_version &version) {
-
         }
 
         void operation::remove_version(mpp::event_emitter &ev, local_version &version) {

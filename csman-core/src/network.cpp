@@ -29,15 +29,17 @@ namespace {
 
     int callback_progress(void *userdata, double total, double wrote, double utotal, double uwrote) {
         auto *d = reinterpret_cast<download_task_base *>(userdata);
-
-        d->emit("progress", total, wrote);
+        if (total == 0) {
+            return 0;
+        }
+        d->emit("internal-progress", total, wrote);
         return 0;
     }
 }
 
 namespace csman {
     namespace core {
-        bool network::get_url_text(string_ref url, std::string &result) {
+        bool network::get_url_text(string_ref url, std::string &result, mpp::event_emitter *ev) {
             bool ok = false;
             download_task<std::string> task(url.str());
 
@@ -47,15 +49,23 @@ namespace csman {
                 buffer->append(data);
                 *wrote = size * nmemb;
             });
+
             task.on("ok", [&result, &ok](std::string *content) {
                 ok = true;
                 result = *content;
             });
+
             task.on("error", [&result](const std::string &reason) {
                 result = reason;
             });
-            task.perform();
 
+            if (ev != nullptr) {
+                task.on("progress", [ev](int progress) {
+                    ev->emit("net-progress", progress);
+                });
+            }
+
+            task.perform();
             return ok;
         }
 

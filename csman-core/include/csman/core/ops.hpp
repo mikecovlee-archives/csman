@@ -50,11 +50,43 @@ namespace csman {
                                                                const std::string &text);
             std::vector<local_version> query_installed_version(const std::string &text);
 
+            /**
+             * Event:
+             *   checkout-error(const std::string &reason)
+             *   checkout-ok()
+             */
             void checkout_version(mpp::event_emitter &ev, local_version &version);
+
+            /**
+             * Event:
+             *   rv-error(const std::string &reason)
+             *   rv-ok()
+             *   rv-progress(int progress)
+             */
             void remove_version(mpp::event_emitter &ev, local_version &version);
+
+            /**
+             * Event:
+             *   iv-error(const std::string &reason)
+             *   iv-ok()
+             *   iv-progress(int progress)
+             */
             void install_version(mpp::event_emitter &ev, source_version &version);
 
+            /**
+             * Event:
+             *   rp-error(const std::string &reason)
+             *   rp-ok()
+             *   rp-progress(int progress)
+             */
             void remove_package(mpp::event_emitter &ev, local_package &pkg);
+
+            /**
+             * Event:
+             *   ip-error(const std::string &reason)
+             *   ip-ok()
+             *   ip-progress(int progress)
+             */
             void install_package(mpp::event_emitter &ev, source_package &pkg);
 
         public:

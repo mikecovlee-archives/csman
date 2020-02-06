@@ -12,6 +12,7 @@ int main() {
     man.load();
 
     man.set_config("platform", "Linux_GCC_AMD64");
+    man.set_current_version("3.3.3.7");
 
     class query : public operation {
     public:
@@ -22,7 +23,7 @@ int main() {
 
             for (auto &r : result) {
                 printf("  %4d: [%s][%s][%s]\n",
-                    r.match_rate,
+                    r._match_rate,
                     r._package._name.c_str(),
                     r._package._full_name.c_str(),
                     r._package._display_name.c_str());

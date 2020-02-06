@@ -51,30 +51,44 @@ namespace {
     using namespace csman::core;
 
     constexpr int MAX_RATE = 2048;
+    constexpr int MAX_VERSION_RATE = 6;
 
-    void search_in_version(std::vector<query_result> &result,
-                           const std::string &text,
-                           const source_version_info &info) {
-        for (auto &pkg : info._packages) {
-            // contains first
-            if (mpp::string_ref(pkg.second._name).contains_ignore_case(text)
-                || mpp::string_ref(pkg.second._display_name).contains_ignore_case(text)) {
-                // match rate second
-                int rate = mix_match_rate(edit_distance(text, pkg.second._name),
-                    edit_distance(text, pkg.second._display_name));
+    int package_match_rate(const std::string &text,
+                           const std::string &name,
+                           const std::string &display_name) {
+        return mix_match_rate(edit_distance(text, name),
+            edit_distance(text, display_name));
+    }
 
-                // MAX_RATE is almost impossible
-                // but when it happens, the match must be ignored
-                if (rate > MAX_RATE) {
-                    continue;
-                }
+    bool package_matches(const std::string &text,
+                         const std::string &name,
+                         const std::string &display_name,
+                         int *rate = nullptr) {
+        if (mpp::string_ref(name).contains_ignore_case(text)
+            || mpp::string_ref(display_name).contains_ignore_case(text)) {
+            // match rate second
+            int rate_ = package_match_rate(text, name, display_name);
+            if (rate != nullptr) {
+                *rate = rate_;
+            }
 
-                query_result r;
-                r._package = pkg.second;
-                r.match_rate = rate;
-                result.push_back(r);
+            // MAX_RATE is almost impossible
+            // but when it happens, the match must be ignored
+            if (rate_ <= MAX_RATE) {
+                return true;
             }
         }
+        return false;
+    }
+
+    bool version_matches(const std::string &text,
+                         const std::string &version,
+                         int *rate = nullptr) {
+        int rate_ = edit_distance(text, version);
+        if (rate != nullptr) {
+            *rate = rate_;
+        }
+        return rate_ <= MAX_VERSION_RATE;
     }
 }
 
@@ -105,8 +119,11 @@ namespace csman {
         }
 
         mpp::optional<std::string> operation::optional_current_version() {
-            // TODO: obtain current version
-            return mpp::optional<std::string>::none();
+            auto &&version = _core->get_current_version();
+            if (version.empty()) {
+                return mpp::optional<std::string>::none();
+            }
+            return mpp::optional<std::string>::from(version);
         }
 
         std::string operation::requires_current_version() {
@@ -118,12 +135,19 @@ namespace csman {
             return version.get();
         }
 
-        std::vector<query_result> operation::query_package(const std::string &text) {
+        std::vector<source_package> operation::query_package(const std::string &text) {
             check_valid_operation();
 
             auto &&platform = requires_platform();
             auto &&version = optional_current_version();
-            std::vector<query_result> result;
+            std::vector<source_package> result;
+
+            // if current version was set
+            // we only search in current version.
+            // otherwise, we search in all versions,
+            // in case that the user wants to know which version
+            // has his/her wanted package.
+            bool all_version = !version.has_value();
 
             // search each source
             for (auto &source : _core->_source_dir._sources) {
@@ -136,20 +160,103 @@ namespace csman {
                 }
 
                 auto &platform_info = it->second;
-                if (version.has_value()) {
-                    // if current version was set
-                    // we only search in current version
-                    auto ver = platform_info._versions.find(version.get());
-                    if (ver != platform_info._versions.end()) {
-                        search_in_version(result, text, ver->second);
+                for (auto &ver : platform_info._versions) {
+                    if (!all_version && ver.first != version.get()) {
+                        // if the user doesn't want query in all versions,
+                        // and we are not in the current version,
+                        // just skip and try next.
+                        continue;
                     }
-                } else {
-                    // otherwise, we search in all versions,
-                    // in case that the user wants to know which version
-                    // has his/her wanted package.
-                    for (auto &e : platform_info._versions) {
-                        search_in_version(result, text, e.second);
+
+                    // enumerate each package
+                    for (auto &pkg : ver.second._packages) {
+                        int rate = 0;
+                        auto &info = pkg.second;
+                        if (package_matches(text, info._name, info._display_name, &rate)) {
+                            source_package r;
+                            r._package = pkg.second;
+                            r._match_rate = rate;
+                            result.push_back(r);
+                        }
                     }
+                }
+            }
+
+            return std::move(result);
+        }
+
+        std::vector<source_version> operation::query_version(const std::string &text) {
+            check_valid_operation();
+
+            auto &&platform = requires_platform();
+            std::vector<source_version> result;
+
+            bool all_version = string_ref("all").equals_ignore_case(text);
+
+            for (auto &source : _core->_source_dir._sources) {
+                auto it = source._platforms.find(platform);
+                if (it == source._platforms.end()) {
+                    // try next source
+                    continue;
+                }
+
+                auto &platform_info = it->second;
+                for (auto &ver : platform_info._versions) {
+                    int rate = 0;
+                    if (all_version || version_matches(text, ver.second._name, &rate)) {
+                        source_version sv;
+                        sv._match_rate = rate;
+                        sv._version = ver.second;
+                        result.push_back(sv);
+                    }
+                }
+            }
+
+            return std::move(result);
+        }
+
+        std::vector<local_package> operation::query_installed_package(const std::string &text) {
+            check_valid_operation();
+            return query_installed_package(requires_current_version(), text);
+        }
+
+        std::vector<local_package> operation::query_installed_package(const std::string &version,
+                                                                      const std::string &text) {
+            check_valid_operation();
+            auto &&current = requires_current_version();
+            auto &&versions = query_installed_version(current);
+            std::vector<local_package> result;
+
+            bool all_package = string_ref("all").equals_ignore_case(text);
+
+            for (auto &ver : versions) {
+                if (ver._name != version) {
+                    // there might be similar versions installed,
+                    // but we only want the current one.
+                    continue;
+                }
+
+                // enumerate each package
+                for (auto &pkg : ver._packages) {
+                    auto &info = pkg.second._info;
+                    if (all_package || package_matches(text, info._name, info._display_name)) {
+                        result.push_back(pkg.second);
+                    }
+                }
+            }
+
+            return std::move(result);
+        }
+
+        std::vector<local_version> operation::query_installed_version(const std::string &text) {
+            check_valid_operation();
+            std::vector<local_version> result;
+
+            bool all_version = string_ref("all").equals_ignore_case(text);
+
+            for (auto &ver : _core->_version_dir._versions) {
+                if (all_version || version_matches(text, ver._name)) {
+                    result.push_back(ver);
                 }
             }
 

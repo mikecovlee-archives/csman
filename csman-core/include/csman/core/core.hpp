@@ -30,6 +30,7 @@ namespace csman {
 
         struct version_dir {
             std::string _path;
+            std::string _current;
             std::vector<local_version> _versions;
         };
 
@@ -92,11 +93,15 @@ namespace csman {
 
             void set_config(const std::string &key, const std::string &value);
 
-            void unset_config(const std::string &key);
-
             std::string get_config(const std::string &key);
 
+            void unset_config(const std::string &key);
+
             std::string get_platform();
+
+            std::string get_current_version();
+
+            void set_current_version(const std::string &version);
 
             void load();
 

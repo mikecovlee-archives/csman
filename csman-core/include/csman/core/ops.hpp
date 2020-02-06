@@ -9,9 +9,18 @@
 
 namespace csman {
     namespace core {
-        struct query_result {
-            int match_rate;
+        // core.hpp
+        struct local_package;
+        struct local_version;
+
+        struct source_package {
+            int _match_rate;
             source_package_info _package;
+        };
+
+        struct source_version {
+            int _match_rate;
+            source_version_info _version;
         };
 
         class operation {
@@ -31,11 +40,19 @@ namespace csman {
             mpp::optional<std::string> optional_current_version();
             std::string requires_current_version();
 
-            std::vector<query_result> query_package(const std::string &text);
+            std::vector<source_package> query_package(const std::string &text);
+            std::vector<source_version> query_version(const std::string &text);
+
+            std::vector<local_package> query_installed_package(const std::string &text);
+            std::vector<local_package> query_installed_package(const std::string &version,
+                                                               const std::string &text);
+            std::vector<local_version> query_installed_version(const std::string &text);
 
         public:
             virtual void perform() = 0;
         };
+
+
     }
 }
 

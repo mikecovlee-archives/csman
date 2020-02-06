@@ -178,6 +178,7 @@ namespace source_dir_impl {
 
     void add_source_info(source_dir &dir, const source_root_info &info) {
         dir._sources.push_back(info);
+        store(dir);
     }
 }
 
@@ -321,6 +322,27 @@ namespace version_dir_impl {
     // always symbolically linked to the version in use
     constexpr const char *CURRENT_DIR = "current";
 
+    // <root-dir>/versions/current.json
+    // {
+    //     "current": "x.x.x.x"
+    // }
+    constexpr const char *CURRENT_FILE = "current.json";
+    constexpr const char *KEY_CURRENT = "current";
+
+    void store_version(version_dir &dir) {
+        if (!dir._current.empty()) {
+            std::string current_file = dir._path + path_separator + CURRENT_FILE;
+            std::fstream stream(current_file, std::ios::out);
+            if (!stream.good()) {
+                throw_ex("Failed to open version config file: " + current_file);
+            }
+
+            Json::Value root;
+            root[KEY_CURRENT] = dir._current;
+            save_json_stream(stream, root);
+        }
+    }
+
     void init(version_dir &dir, const std::string &root_dir) {
         dir._path = root_dir + path_separator + "versions";
         OS::current()->mkdir(dir._path);
@@ -345,15 +367,33 @@ namespace version_dir_impl {
     }
 
     void load(version_dir &dir) {
+        std::string current_file = dir._path + path_separator + CURRENT_FILE;
+        std::fstream stream(current_file, std::ios::in);
+        if (stream.good()) {
+            // parse current version if set
+            sp<Json::Value> root = load_json_stream(stream);
+            dir._current = (*root)[KEY_CURRENT].asString();
+        }
+
         for (auto &lv : dir._versions) {
             local_version_impl::load(lv);
         }
     }
 
     void store(version_dir &dir) {
+        store_version(dir);
         for (auto &lv : dir._versions) {
             local_version_impl::store(lv);
         }
+    }
+
+    std::string current(version_dir &dir) {
+        return dir._current;
+    }
+
+    void set_current(version_dir &dir, const std::string &version) {
+        dir._current = version;
+        store_version(dir);
     }
 }
 
@@ -403,6 +443,7 @@ namespace user_config_impl {
 
     void set(user_config &uc, const std::string &key, const std::string &value) {
         uc._config[key] = value;
+        store(uc);
     }
 
     void unset(user_config &uc, const std::string &key) {
@@ -482,6 +523,14 @@ namespace csman {
 
         std::string csman_core::get_platform() {
             return get_config("platform");
+        }
+
+        std::string csman_core::get_current_version() {
+            return version_dir_impl::current(_version_dir);
+        }
+
+        void csman_core::set_current_version(const std::string &version) {
+            version_dir_impl::set_current(_version_dir, version);
         }
     }
 }

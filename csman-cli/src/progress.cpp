@@ -27,13 +27,6 @@ namespace csman {
                             index = 0;
                         }
 
-                        if (progress > 100) {
-                            bar._progress = 0;
-                            progress = 0;
-                            os->rewind_cursor();
-                            printf("  ✔︎\n");
-                        }
-
                         printf("  %c  %3d%% ", C[index++ % sizeof(C)], progress);
 
                         int complete = width * progress / 100;

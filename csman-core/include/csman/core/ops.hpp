@@ -52,8 +52,8 @@ namespace csman {
 
             /**
              * Event:
-             *   checkout-error(const std::string &reason)
-             *   checkout-ok()
+             *   co-error(const std::string &reason)
+             *   co-ok()
              */
             void checkout_version(mpp::event_emitter &ev, local_version &version);
 

@@ -4,6 +4,7 @@
 
 #include <csman/os/os.hpp>
 #include <csman/core/ops.hpp>
+#include <sstream>
 
 namespace csman {
     namespace core {
@@ -72,7 +73,35 @@ namespace csman {
         }
 
         void operation::remove_package(mpp::event_emitter &ev, local_package &pkg) {
+            // first of all, make sure that this package exists.
+            std::string package_contents_root =
+                _core->_version_dir._path + mpp::path_separator + pkg._owner_version;
+            if (!OS::current()->directory_exists(pkg._path)) {
+                ev.emit("rp-error", std::string(
+                    "package " + pkg._info._name + " doesn't exists in version "
+                    + pkg._owner_version + ": " + OS::current()->error()));
+                return;
+            }
 
+            // secondly, remove package files
+            int files = pkg._files.size();
+            int deleted = 0;
+            ev.emit("rp-progress", 0);
+            std::stringstream ss;
+            for (auto &f : pkg._files) {
+                ss << package_contents_root;
+                ss << mpp::path_separator;
+                ss << f;
+                OS::current()->rm_rf(ss.str());
+                ss.str(std::string());
+                ss.clear();
+                ev.emit("rp-progress", static_cast<int>(++deleted / files));
+            }
+
+            // finally, remove package info dir
+            OS::current()->rm_rf(pkg._path);
+            ev.emit("rp-progress", 100);
+            ev.emit("rp-ok");
         }
 
         void operation::install_package(mpp::event_emitter &ev, source_package &pkg) {

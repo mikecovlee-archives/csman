@@ -26,7 +26,8 @@ namespace source_dir_impl {
 
     void init(source_dir &dir, const std::string &root_dir) {
         dir._path = root_dir + path_separator + "sources";
-        if (!OS::current()->mkdir(dir._path)) {
+        if (!OS::current()->directory_exists(dir._path)
+            && !OS::current()->mkdir(dir._path)) {
             throw_ex("Failed to mkdir " + dir._path
                      + ": " + OS::current()->error());
         }
@@ -230,7 +231,8 @@ namespace version_dir_impl {
 
     void init(version_dir &dir, const std::string &root_dir) {
         dir._path = root_dir + path_separator + "versions";
-        if (!OS::current()->mkdir(dir._path)) {
+        if (!OS::current()->directory_exists(dir._path)
+            && !OS::current()->mkdir(dir._path)) {
             throw_ex("Failed to mkdir " + dir._path
                      + ": " + OS::current()->error());
         }
@@ -354,7 +356,8 @@ namespace csman {
         }
 
         void csman_core::init() {
-            if (!OS::current()->mkdir(_root_dir)) {
+            if (!OS::current()->directory_exists(_root_dir)
+                && !OS::current()->mkdir(_root_dir)) {
                 throw_ex("Failed to mkdir " + _root_dir
                          + ": " + OS::current()->error());
             }

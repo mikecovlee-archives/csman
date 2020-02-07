@@ -44,6 +44,8 @@ namespace csman {
             virtual std::string error() = 0;
 
             virtual void rewind_cursor() = 0;
+
+            virtual bool make_executable(const std::string &path);
         };
     }
 }

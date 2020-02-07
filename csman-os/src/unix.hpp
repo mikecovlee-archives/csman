@@ -27,6 +27,8 @@ namespace csman {
 
             bool directory_exists(const std::string &path) override;
 
+            bool make_executable(const std::string &path) override;
+
             bool ln(const std::string &target, const std::string &linkpath) override;
         };
     }

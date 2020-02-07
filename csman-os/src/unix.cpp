@@ -88,6 +88,10 @@ namespace csman {
             ::closedir(dp);
             return true;
         }
+
+        bool os_impl_unix::make_executable(const std::string &path) {
+            return ::chmod(path.c_str(), 0755) == 0;
+        }
     }
 }
 

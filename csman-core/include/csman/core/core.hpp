@@ -111,6 +111,8 @@ namespace csman {
 
             void set_current_version(const std::string &version);
 
+            void unset_current_version();
+
             void load();
 
             void store();

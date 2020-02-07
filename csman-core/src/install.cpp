@@ -33,10 +33,38 @@ namespace csman {
 
             // finally, update config
             _core->set_current_version(version._name);
+            ev.emit("co-ok");
         }
 
         void operation::remove_version(mpp::event_emitter &ev, local_version &version) {
+            // first of all, unset current version
+            // if we are removing it
+            ev.emit("rv-progress", 10);
+            auto &&cv = optional_current_version();
+            if (cv.has_value() && version._name == cv.get()) {
+                std::string current_dir =
+                    _core->_version_dir._path + mpp::path_separator + "current";
+                ev.emit("rv-progress", 40);
+                if (!OS::current()->unlink(current_dir)) {
+                    ev.emit("rv-error", std::string(
+                        "failed to remove current version " + version._name
+                        + ": unable to remove symlink: "
+                        + OS::current()->error()));
+                    return;
+                }
+                _core->unset_current_version();
+            }
 
+            // secondly, remove everything under version.
+            // DO NOT check errors here, because we have removed
+            // current version config globally,
+            // just proceed when error occurs.
+            ev.emit("rv-progress", 70);
+            OS::current()->rm_rf(version._path);
+
+            // and... that's all
+            ev.emit("rv-progress", 100);
+            ev.emit("rv-ok");
         }
 
         void operation::install_version(mpp::event_emitter &ev, source_version &version) {

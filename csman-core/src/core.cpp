@@ -516,5 +516,9 @@ namespace csman {
         void csman_core::set_current_version(const std::string &version) {
             set_config("current", version);
         }
+
+        void csman_core::unset_current_version() {
+            unset_config("current");
+        }
     }
 }

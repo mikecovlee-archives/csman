@@ -5,11 +5,11 @@
 #include <csman/os/os.hpp>
 #include <csman/core/ops.hpp>
 #include <csman/core/network.hpp>
+#include <csman/core/parser.hpp>
+#include <json/writer.h>
 #include <sstream>
 #include <fstream>
 #include <utility>
-#include <json/writer.h>
-#include <csman/core/parser.hpp>
 
 namespace {
     using namespace csman::core;

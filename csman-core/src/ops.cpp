@@ -8,9 +8,10 @@
 namespace csman {
     namespace core {
         void operation::check_valid_operation() {
+            static std::string ERROR =
+                "Internal error: operations should be performed through csman_core::perform()";
             if (_core == nullptr) {
-                throw_ex("Invalid operation: operation was not performed "
-                         "by csman_core::perform()");
+                throw_ex(ERROR);
             }
         }
 
@@ -23,10 +24,16 @@ namespace csman {
         }
 
         std::string operation::requires_platform() {
+            static std::string ERROR =
+                "platform not set, you can run the following command\n"
+                "\n"
+                "    csman config set platform <your-platform>\n"
+                "\n"
+                "to tell me which platform you are using.\n";
+
             auto &&platform = optional_platform();
             if (!platform.has_value()) {
-                throw_ex("platform not found in config.json, please run "
-                         "`csman config set platform <your-platform>` first.");
+                throw_ex(ERROR);
             }
             return platform.get();
         }
@@ -40,10 +47,16 @@ namespace csman {
         }
 
         std::string operation::requires_current_version() {
+            static std::string ERROR =
+                "current version not set, you can run the following command\n"
+                "\n"
+                "    csman checkout <version>\n"
+                "\n"
+                "to set current version to <version>.\n";
+
             auto &&version = optional_current_version();
             if (!version.has_value()) {
-                throw_ex("current version not set, please run "
-                         "`csman checkout <version>` first.");
+                throw_ex(ERROR);
             }
             return version.get();
         }

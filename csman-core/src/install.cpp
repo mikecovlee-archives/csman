@@ -299,6 +299,14 @@ namespace csman {
                     throw install_error(pkg, "failed to download content "
                                              + content._name + ": " + reason);
                 });
+                downloader.on("ok", [&](std::fstream *) {
+                    if (content._type == source_content_type::BIN
+                        && !OS::current()->make_executable(file_path)) {
+                        throw install_error(pkg, "failed to make "
+                                                 + file_path + " executable: " +
+                                                 OS::current()->error());
+                    }
+                });
                 downloader.perform();
             }
 

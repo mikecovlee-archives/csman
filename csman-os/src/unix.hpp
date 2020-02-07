@@ -19,6 +19,8 @@ namespace csman {
 
             std::string error() override;
 
+            bool rm_rf(const std::string &path) override;
+
             bool unlink(const std::string &path) override;
 
             bool file_exists(const std::string &path) override;

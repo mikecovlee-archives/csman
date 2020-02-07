@@ -39,6 +39,8 @@ namespace csman {
 
             virtual bool directory_exists(const std::string &path) = 0;
 
+            virtual bool rm_rf(const std::string &path) = 0;
+
             virtual std::string error() = 0;
 
             virtual void rewind_cursor() = 0;

@@ -3,6 +3,8 @@
 //
 #ifndef _WIN32
 
+#include <mozart++/string/string.hpp>
+
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
@@ -66,6 +68,25 @@ namespace csman {
 
         bool os_impl_unix::unlink(const std::string &path) {
             return ::unlink(path.c_str()) == 0;
+        }
+
+        bool os_impl_unix::rm_rf(const std::string &path) {
+            DIR *dp = nullptr;
+            if ((dp = ::opendir(path.c_str())) == nullptr) {
+                return false;
+            }
+
+            dirent *ent = nullptr;
+            while ((ent = ::readdir(dp)) != nullptr) {
+                if (ent->d_type == DT_DIR) {
+                    rm_rf(path + '/' + ent->d_name);
+                } else {
+                    unlink(path + '/' + ent->d_name);
+                }
+            }
+
+            ::closedir(dp);
+            return true;
         }
     }
 }

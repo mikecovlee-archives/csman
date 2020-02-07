@@ -6,6 +6,7 @@
 #include <mozart++/optional>
 #include <mozart++/event>
 #include <csman/core/core.hpp>
+#include <set>
 #include <mutex>
 
 namespace csman {
@@ -34,6 +35,14 @@ namespace csman {
 
         private:
             void check_valid_operation();
+
+            void collect_deps(std::vector<source_package> &deps, source_package &pkg);
+
+            void collect_deps_impl(std::set<std::string> &names,
+                                   std::vector<source_package> &deps,
+                                   source_package &pkg);
+
+            void install_internal(mpp::event_emitter &ev, const source_package &pkg);
 
         protected:
             mpp::optional<std::string> optional_platform();
@@ -67,9 +76,10 @@ namespace csman {
 
             /**
              * Event:
-             *   iv-error(const std::string &reason)
-             *   iv-ok()
-             *   iv-progress(int progress)
+             *   ip-error(const std::string &reason)
+             *   ip-ok()
+             *   ip-progress(int progress, const std::string &info)
+             *   ip-net-progress(int progress)
              */
             void install_version(mpp::event_emitter &ev, source_version &version);
 
@@ -85,7 +95,8 @@ namespace csman {
              * Event:
              *   ip-error(const std::string &reason)
              *   ip-ok()
-             *   ip-progress(int progress)
+             *   ip-progress(int progress, const std::string &info)
+             *   ip-net-progress(int progress)
              */
             void install_package(mpp::event_emitter &ev, source_package &pkg);
 

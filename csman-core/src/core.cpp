@@ -124,7 +124,10 @@ namespace source_dir_impl {
 
     void init(source_dir &dir, const std::string &root_dir) {
         dir._path = root_dir + path_separator + "sources";
-        OS::current()->mkdir(dir._path);
+        if (!OS::current()->mkdir(dir._path)) {
+            throw_ex("Failed to mkdir " + dir._path
+                     + ": " + OS::current()->error());
+        }
     }
 
     void load(source_dir &dir) {
@@ -325,7 +328,10 @@ namespace version_dir_impl {
 
     void init(version_dir &dir, const std::string &root_dir) {
         dir._path = root_dir + path_separator + "versions";
-        OS::current()->mkdir(dir._path);
+        if (!OS::current()->mkdir(dir._path)) {
+            throw_ex("Failed to mkdir " + dir._path
+                     + ": " + OS::current()->error());
+        }
 
         // scan versions directory
         for (auto &version : OS::current()->ls(dir._path)) {
@@ -369,7 +375,7 @@ namespace user_config_impl {
     //    "key": value,
     //    ...
     // }
-    constexpr const char * CONFIG_FILE = "config.json";
+    constexpr const char *CONFIG_FILE = "config.json";
 
     void init(user_config &uc, const std::string &path) {
         uc._path = path + path_separator + CONFIG_FILE;
@@ -446,7 +452,10 @@ namespace csman {
         }
 
         void csman_core::init() {
-            OS::current()->mkdir(_root_dir);
+            if (!OS::current()->mkdir(_root_dir)) {
+                throw_ex("Failed to mkdir " + _root_dir
+                         + ": " + OS::current()->error());
+            }
             source_dir_impl::init(_source_dir, _root_dir);
             version_dir_impl::init(_version_dir, _root_dir);
             user_config_impl::init(_user_config, _root_dir);

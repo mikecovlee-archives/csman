@@ -111,13 +111,13 @@ namespace csman {
 
             CURLcode ret;
             if ((ret = curl_easy_perform(curl)) != 0) {
+                curl_easy_cleanup(curl);
                 this->emit("error", std::string(curl_easy_strerror(ret)));
             } else {
+                curl_easy_cleanup(curl);
                 this->emit("internal-ok");
                 this->emit("end");
             }
-
-            curl_easy_cleanup(curl);
         }
     }
 }

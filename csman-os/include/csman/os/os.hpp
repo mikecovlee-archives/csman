@@ -31,7 +31,13 @@ namespace csman {
 
             virtual std::vector<file> ls(const std::string &path) = 0;
 
-            virtual bool ln(const std::string &from, const std::string &to) = 0;
+            virtual bool ln(const std::string &target, const std::string &linkpath) = 0;
+
+            virtual bool file_exists(const std::string &path) = 0;
+
+            virtual bool directory_exists(const std::string &path) = 0;
+
+            virtual std::string error() = 0;
 
             virtual void rewind_cursor() = 0;
         };

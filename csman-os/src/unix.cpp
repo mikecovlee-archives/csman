@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <cerrno>
+#include <cstring>
 
 #include "unix.hpp"
 
@@ -37,8 +39,29 @@ namespace csman {
             putchar('\r');
         }
 
-        bool os_impl_unix::ln(const std::string &from, const std::string &to) {
-            return symlink(from.c_str(), to.c_str()) == 0;
+        bool os_impl_unix::ln(const std::string &target, const std::string &linkpath) {
+            unlink(linkpath.c_str());
+            return symlink(target.c_str(), linkpath.c_str()) == 0;
+        }
+
+        bool os_impl_unix::file_exists(const std::string &path) {
+            struct stat buf{};
+            if (stat(path.c_str(), &buf) == 0) {
+                return S_ISDIR(buf.st_mode);
+            }
+            return false;
+        }
+
+        bool os_impl_unix::directory_exists(const std::string &path) {
+            struct stat buf{};
+            if (stat(path.c_str(), &buf) == 0) {
+                return !S_ISDIR(buf.st_mode);
+            }
+            return false;
+        }
+
+        std::string os_impl_unix::error() {
+            return strerror(errno);
         }
     }
 }

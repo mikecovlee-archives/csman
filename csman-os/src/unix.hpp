@@ -17,7 +17,13 @@ namespace csman {
 
             void rewind_cursor() override;
 
-            bool ln(const std::string &from, const std::string &to) override;
+            std::string error() override;
+
+            bool file_exists(const std::string &path) override;
+
+            bool directory_exists(const std::string &path) override;
+
+            bool ln(const std::string &target, const std::string &linkpath) override;
         };
     }
 }

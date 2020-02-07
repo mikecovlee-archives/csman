@@ -183,8 +183,7 @@ namespace csman {
         std::vector<local_package> operation::query_installed_package(const std::string &version,
                                                                       const std::string &text) {
             check_valid_operation();
-            auto &&current = requires_current_version();
-            auto &&versions = query_installed_version(current);
+            auto &&versions = query_installed_version(version);
             std::vector<local_package> result;
 
             bool all_package = string_ref("all").equals_ignore_case(text);

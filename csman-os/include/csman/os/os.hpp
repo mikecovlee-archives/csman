@@ -45,7 +45,7 @@ namespace csman {
 
             virtual void rewind_cursor() = 0;
 
-            virtual bool make_executable(const std::string &path);
+            virtual bool make_executable(const std::string &path) = 0;
         };
     }
 }

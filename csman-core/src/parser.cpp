@@ -12,6 +12,104 @@
 
 namespace csman {
     namespace core {
+        std::string jsonify(source_content_type type) {
+            switch (type) {
+                case source_content_type::UNKNOWN:
+                    return "UNKNOWN";
+                case source_content_type::DLL:
+                    return "DLL";
+                case source_content_type::BIN:
+                    return "BIN";
+                case source_content_type::CSE:
+                    return "CSE";
+                case source_content_type::CSP:
+                    return "CSP";
+                case source_content_type::ZIP:
+                    return "ZIP";
+            }
+        }
+
+        Json::Value jsonify(const source_content_info &info) {
+            Json::Value node;
+            node[0] = jsonify(info._type);
+            node[1] = info._name;
+            for (auto &meta : info._meta) {
+                node[2][meta.first] = meta.second;
+            }
+            return std::move(node);
+        }
+
+        Json::Value jsonify(const source_package_info &info) {
+            Json::Value node;
+            node[KEY_NAME] = info._display_name;
+            node[KEY_PNAME] = info._name;
+            node[KEY_PFNAME] = info._full_name;
+            node[KEY_BASE_URL] = info._base_url;
+            node[KEY_VERSION] = info._version;
+
+            auto &deps = node[KEY_DEPS];
+            for (auto &dep : info._deps) {
+                deps[dep.first] = dep.second;
+            }
+
+            auto &contents = node[KEY_CONTENTS];
+            int i = 0;
+            for (auto &content : info._contents) {
+                contents[i++] = jsonify(content);
+            }
+
+            return std::move(node);
+        }
+
+        Json::Value jsonify(const source_version_info &info) {
+            Json::Value node;
+            node[KEY_NAME] = info._name;
+            node[KEY_BASE_URL] = info._base_url;
+            node[KEY_RTM] = info._package_rtm;
+            node[KEY_DEV] = info._package_dev;
+
+            auto &pkgs = node[KEY_PKG];
+            int i = 0;
+            for (auto &pkg : info._packages) {
+                pkgs[i++] = jsonify(pkg.second);
+            }
+
+            return std::move(node);
+        }
+
+        Json::Value jsonify(const source_platform_info &info) {
+            Json::Value node;
+            node[KEY_NAME] = info._name;
+            node[KEY_BASE_URL] = info._base_url;
+            node[KEY_VERSION] = info._version_default;
+            node[KEY_LATEST] = info._version_latest;
+            node[KEY_NIGHTLY] = info._version_nightly;
+
+            auto &versions = node[KEY_VERSIONS];
+            int i = 0;
+            for (auto &version : info._versions) {
+                versions[i++] = jsonify(version.second);
+            }
+            return std::move(node);
+        }
+
+        Json::Value jsonify(const source_root_info &info) {
+            Json::Value node;
+            node[KEY_BASE_URL] = info._base_url;
+
+            auto &platforms = node[KEY_PLATFORM];
+
+            int i = 0;
+            for (auto &platform : info._platforms) {
+                platforms[i++] = jsonify(platform.second);
+            }
+            return std::move(node);
+        }
+    }
+}
+
+namespace csman {
+    namespace core {
         using namespace Json;
 
         sp<Json::Value> load_json_file(const std::string &path) {

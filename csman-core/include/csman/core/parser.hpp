@@ -52,5 +52,17 @@ namespace csman {
         void parse_platform(source_platform_info &info, const std::string &json);
 
         void parse_root(source_root_info &info, const std::string &json);
+
+        std::string jsonify(source_content_type type);
+
+        Json::Value jsonify(const source_content_info &info);
+
+        Json::Value jsonify(const source_package_info &info);
+
+        Json::Value jsonify(const source_version_info &info);
+
+        Json::Value jsonify(const source_platform_info &info);
+
+        Json::Value jsonify(const source_root_info &info);
     }
 }

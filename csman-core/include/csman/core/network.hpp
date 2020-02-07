@@ -69,6 +69,11 @@ namespace csman {
                 });
             }
 
+        protected:
+            T &get_buffer() {
+                return _buffer;
+            }
+
         public:
             download_task() {
                 init_callbacks();

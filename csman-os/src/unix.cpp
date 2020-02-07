@@ -49,7 +49,7 @@ namespace csman {
         bool os_impl_unix::file_exists(const std::string &path) {
             struct stat buf{};
             if (::stat(path.c_str(), &buf) == 0) {
-                return S_ISDIR(buf.st_mode);
+                return !S_ISDIR(buf.st_mode);
             }
             return false;
         }
@@ -57,7 +57,7 @@ namespace csman {
         bool os_impl_unix::directory_exists(const std::string &path) {
             struct stat buf{};
             if (::stat(path.c_str(), &buf) == 0) {
-                return !S_ISDIR(buf.st_mode);
+                return S_ISDIR(buf.st_mode);
             }
             return false;
         }

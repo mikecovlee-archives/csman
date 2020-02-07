@@ -31,6 +31,8 @@ namespace csman {
 
             virtual std::vector<file> ls(const std::string &path) = 0;
 
+            virtual bool ln(const std::string &from, const std::string &to) = 0;
+
             virtual void rewind_cursor() = 0;
         };
     }

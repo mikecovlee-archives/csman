@@ -16,6 +16,8 @@ namespace csman {
             std::vector<file> ls(const std::string &path) override;
 
             void rewind_cursor() override;
+
+            bool ln(const std::string &from, const std::string &to) override;
         };
     }
 }

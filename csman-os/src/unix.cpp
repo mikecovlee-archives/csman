@@ -5,6 +5,7 @@
 
 #include <sys/stat.h>
 #include <dirent.h>
+#include <unistd.h>
 
 #include "unix.hpp"
 
@@ -34,6 +35,10 @@ namespace csman {
 
         void os_impl_unix::rewind_cursor() {
             putchar('\r');
+        }
+
+        bool os_impl_unix::ln(const std::string &from, const std::string &to) {
+            return symlink(from.c_str(), to.c_str()) == 0;
         }
     }
 }

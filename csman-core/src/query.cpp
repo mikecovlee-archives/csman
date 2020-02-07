@@ -221,5 +221,18 @@ namespace csman {
 
             return std::move(result);
         }
+
+        bool operation::package_installed(const source_package &pkg) {
+            auto &&locals = query_installed_package(pkg._owner_version,
+                pkg._package._name);
+            for (auto &p : locals) {
+                if (p._info._name == pkg._package._name
+                    && p._info._full_name == pkg._package._full_name
+                    && p._info._version == pkg._package._version) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

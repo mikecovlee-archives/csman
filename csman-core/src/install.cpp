@@ -205,6 +205,10 @@ namespace csman {
 
             try {
                 for (auto &dep : deps) {
+                    if (package_installed(dep)) {
+                        continue;
+                    }
+
                     ev.emit("ip-progress", progress, std::string(
                         "Installing " + dep._package._name + "(" + dep._package._version + ")"));
                     install_internal(ev, dep);

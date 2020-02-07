@@ -59,6 +59,8 @@ namespace csman {
                                                                const std::string &text);
             std::vector<local_version> query_installed_version(const std::string &text);
 
+            bool package_installed(const source_package &pkg);
+
             /**
              * Event:
              *   co-error(const std::string &reason)
@@ -102,6 +104,7 @@ namespace csman {
 
         public:
             virtual ~operation() = default;
+
             virtual void perform() = 0;
         };
     }

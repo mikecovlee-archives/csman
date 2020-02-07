@@ -33,6 +33,8 @@ namespace csman {
 
             virtual bool ln(const std::string &target, const std::string &linkpath) = 0;
 
+            virtual bool unlink(const std::string &path) = 0;
+
             virtual bool file_exists(const std::string &path) = 0;
 
             virtual bool directory_exists(const std::string &path) = 0;

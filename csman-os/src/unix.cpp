@@ -19,19 +19,19 @@ namespace csman {
 
         std::vector<file> os_impl_unix::ls(const std::string &path) {
             DIR *dp = nullptr;
-            if ((dp = opendir(path.c_str())) == nullptr) {
+            if ((dp = ::opendir(path.c_str())) == nullptr) {
                 return std::vector<file>();
             }
 
             std::vector<file> files;
 
             dirent *ent = nullptr;
-            while ((ent = readdir(dp)) != nullptr) {
+            while ((ent = ::readdir(dp)) != nullptr) {
                 files.emplace_back(ent->d_name,
                     ent->d_type == DT_DIR ? file_type::DIR : file_type::FILE);
             }
 
-            closedir(dp);
+            ::closedir(dp);
             return std::move(files);
         }
 
@@ -40,13 +40,13 @@ namespace csman {
         }
 
         bool os_impl_unix::ln(const std::string &target, const std::string &linkpath) {
-            unlink(linkpath.c_str());
-            return symlink(target.c_str(), linkpath.c_str()) == 0;
+            unlink(linkpath);
+            return ::symlink(target.c_str(), linkpath.c_str()) == 0;
         }
 
         bool os_impl_unix::file_exists(const std::string &path) {
             struct stat buf{};
-            if (stat(path.c_str(), &buf) == 0) {
+            if (::stat(path.c_str(), &buf) == 0) {
                 return S_ISDIR(buf.st_mode);
             }
             return false;
@@ -54,14 +54,18 @@ namespace csman {
 
         bool os_impl_unix::directory_exists(const std::string &path) {
             struct stat buf{};
-            if (stat(path.c_str(), &buf) == 0) {
+            if (::stat(path.c_str(), &buf) == 0) {
                 return !S_ISDIR(buf.st_mode);
             }
             return false;
         }
 
         std::string os_impl_unix::error() {
-            return strerror(errno);
+            return ::strerror(errno);
+        }
+
+        bool os_impl_unix::unlink(const std::string &path) {
+            return ::unlink(path.c_str()) == 0;
         }
     }
 }

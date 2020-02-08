@@ -193,7 +193,9 @@ namespace local_version_impl {
         std::string packages_dir = lv._path + path_separator + PKG_DIR;
 
         for (auto &pkg : OS::current()->ls(packages_dir)) {
-            if (pkg._type != file_type::DIR) {
+            if (pkg._type != file_type::DIR
+                || pkg._name == "."
+                || pkg._name == "..") {
                 // skip non-directories
                 continue;
             }
@@ -252,7 +254,9 @@ namespace version_dir_impl {
                 continue;
             }
 
-            if (version._name == CURRENT_DIR) {
+            if (version._name == CURRENT_DIR
+                || version._name == "."
+                || version._name == "..") {
                 // skip "versions/current"
                 continue;
             }

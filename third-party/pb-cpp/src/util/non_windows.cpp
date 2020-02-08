@@ -30,16 +30,16 @@
 #include <unistd.h>
 
 
-nonstd::optional<std::size_t> pb::util::terminal_width() {
+mpp::optional<std::size_t> pb::util::terminal_width() {
 	if(!isatty(STDOUT_FILENO))
-		return nonstd::nullopt;
+		return mpp::optional<std::size_t>::none();
 
 	winsize ws{};
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
 	if(ws.ws_col > 0)
-		return ws.ws_col;
+		return mpp::optional<std::size_t>::from(ws.ws_col);
 	else
-		return nonstd::nullopt;
+		return mpp::optional<std::size_t>::none();
 }
 
 std::ostream & pb::util::operator<<(std::ostream & out, cursor_up_mover cum) {

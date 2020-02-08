@@ -28,11 +28,20 @@ endif ()
 
 include_directories(include)
 
-aux_source_directory(./include SRCS)
-aux_source_directory(./src SRCS_IMPL)
-
 add_library(pb-cpp STATIC
-        ${SRCS}
-        ${SRCS_IMPL}
+        include/pb-cpp/defaults.hpp
+        include/pb-cpp/multibar.hpp
+        include/pb-cpp/progressbar.hpp
+        include/pb-cpp/util.hpp
+        include/pb-cpp/unit.hpp
+        include/pb-cpp/impl/mpsc.inc
+        include/pb-cpp/impl/progressbar.inc
+        src/util/generic.cpp
+        src/util/non_windows.cpp
+        src/util/windows.cpp
+        src/defaults.cpp
+        src/multibar.cpp
+        src/multibar_notifying_pipe.cpp
+        src/progressbar.cpp
         )
 set_target_properties(pb-cpp PROPERTIES LINKER_LANGUAGE CXX)

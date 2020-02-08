@@ -42,18 +42,22 @@ namespace source_dir_impl {
             return;
         }
 
-        sp<Json::Value> root = load_json_stream(stream);
-        auto &sources = *root;
+        try {
+            sp<Json::Value> root = load_json_stream(stream);
+            auto &sources = *root;
 
-        if (!sources.isObject()) {
-            throw_ex("syntax error(source list): source entry should be an object");
-        }
+            if (!sources.isObject()) {
+                throw_ex("syntax error(source list): source entry should be an object");
+            }
 
-        for (auto &source_url : sources.getMemberNames()) {
-            auto &source_object = sources[source_url];
-            source_root_info info;
-            parse_root(info, source_object);
-            dir._sources.push_back(info);
+            for (auto &source_url : sources.getMemberNames()) {
+                auto &source_object = sources[source_url];
+                source_root_info info;
+                parse_root(info, source_object);
+                dir._sources.push_back(info);
+            }
+        } catch (source_error &error) {
+            // invalid source, just skip
         }
     }
 
@@ -117,22 +121,26 @@ namespace local_package_impl {
             return;
         }
 
-        sp<Json::Value> root = load_json_stream(stream);
-        auto &value = *root;
-        auto &info = value[KEY_INFO];
-        auto &files = value[KEY_FILES];
+        try {
+            sp<Json::Value> root = load_json_stream(stream);
+            auto &value = *root;
+            auto &info = value[KEY_INFO];
+            auto &files = value[KEY_FILES];
 
-        if (!info.isObject() || !files.isArray()) {
+            if (!info.isObject() || !files.isArray()) {
+                // invalid package, just return
+                return;
+            }
+
+            // parse package info from source
+            parse_package(lp._info, info);
+
+            // parse local file list
+            for (auto &f : files) {
+                lp._files.push_back(f.asString());
+            }
+        } catch (source_error &error) {
             // invalid package, just return
-            return;
-        }
-
-        // parse package info from source
-        parse_package(lp._info, info);
-
-        // parse local file list
-        for (auto &f : files) {
-            lp._files.push_back(f.asString());
         }
     }
 
@@ -292,9 +300,13 @@ namespace user_config_impl {
             return;
         }
 
-        sp<Json::Value> root = load_json_stream(stream);
-        for (auto &name : root->getMemberNames()) {
-            uc._config.emplace(name, (*root)[name].asString());
+        try {
+            sp<Json::Value> root = load_json_stream(stream);
+            for (auto &name : root->getMemberNames()) {
+                uc._config.emplace(name, (*root)[name].asString());
+            }
+        } catch (source_error &error) {
+            // invalid config, skip
         }
     }
 

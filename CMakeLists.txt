@@ -40,6 +40,10 @@ message(STATUS ":: Including dependency: jsoncpp")
 add_subdirectory(third-party/jsoncpp)
 include_directories(third-party/jsoncpp/include)
 
+message(STATUS ":: Including dependency: pb-cpp")
+add_subdirectory(third-party/pb-cpp)
+include_directories(third-party/pb-cpp/include)
+
 add_subdirectory(csman-os)
 include_directories(csman-os/include)
 

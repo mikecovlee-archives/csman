@@ -3,7 +3,7 @@
 //
 #include <csman/cli/progress.hpp>
 #include <csman/core/core.hpp>
-#include <chrono>
+#include <csman/core/ops.hpp>
 
 using namespace csman::cli;
 using namespace csman::core;
@@ -12,24 +12,40 @@ int main(int argc, const char **argv) {
     csman_core man("/home/kiva/csman-home");
     man.load();
 
-    mpp::event_emitter ev;
-    progress_bar bar;
-    bar.set_width(50);
+    man.set_config("platform", "Linux_GCC_AMD64");
+    man.unset_current_version();
 
-    ev.on("as-progress", [&](int progress) {
-        bar.tick(progress);
-    });
-    ev.on("as-error",[&](const std::string &reason) {
+    class install_latest : public operation, public mpp::event_emitter {
+    public:
+        void perform() override {
+            auto &&result = query_version("all");
+            install_version(*this, result[0]);
+        }
+    };
+
+    progress_bar bar;
+
+    install_latest op;
+
+    op.on("ip-error", [&](const std::string &reason) {
         bar.stop(false);
     });
-    ev.on("as-ok", [&]() {
+
+    op.on("ip-ok", [&]() {
+        bar.tick(100);
         bar.stop(true);
-        man.store();
     });
 
-    const char *url = "http://mirrors.covariant.cn/csman";
-    printf(":: Updating source info: %s\n", url);
+    op.on("ip-progress", [&](int progress, const std::string &info) {
+        bar.message(info);
+        bar.tick(progress);
+    });
+
+    op.on("ip-net-progress", [](int progress) {
+    });
+
     bar.start();
-    man.add_source(ev, url);
+    man.perform(op);
+
     return 0;
 }

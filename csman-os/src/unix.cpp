@@ -8,6 +8,8 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
+#include <termios.h>
 #include <cerrno>
 #include <cstring>
 
@@ -91,6 +93,16 @@ namespace csman {
 
         bool os_impl_unix::make_executable(const std::string &path) {
             return ::chmod(path.c_str(), 0755) == 0;
+        }
+
+        int os_impl_unix::terminal_width() {
+            if (!isatty(STDOUT_FILENO)) {
+                return -1;
+            }
+
+            winsize ws{};
+            ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
+            return ws.ws_col > 0 ? ws.ws_col : -1;
         }
     }
 }

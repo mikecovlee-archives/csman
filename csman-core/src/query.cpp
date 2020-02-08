@@ -234,5 +234,13 @@ namespace csman {
             }
             return false;
         }
+
+        std::vector<std::string> operation::query_sources() {
+            std::vector<std::string> urls;
+            for (auto &s : _core->_source_dir._sources) {
+                urls.push_back(s._base_url);
+            }
+            return std::move(urls);
+        }
     }
 }

@@ -51,6 +51,8 @@ namespace csman {
             mpp::optional<std::string> optional_current_version();
             std::string requires_current_version();
 
+            std::vector<std::string> query_sources();
+
             std::vector<source_package> query_package(const std::string &text);
             std::vector<source_version> query_version(const std::string &text);
 

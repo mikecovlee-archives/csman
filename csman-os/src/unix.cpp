@@ -80,6 +80,11 @@ namespace csman {
 
             dirent *ent = nullptr;
             while ((ent = ::readdir(dp)) != nullptr) {
+                if (mpp::string_ref(ent->d_name).equals(".")
+                    || mpp::string_ref(ent->d_name).equals("..")) {
+                    continue;
+                }
+
                 if (ent->d_type == DT_DIR) {
                     rm_rf(path + '/' + ent->d_name);
                 } else {

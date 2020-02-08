@@ -20,6 +20,7 @@ namespace csman {
             std::string _path;
             std::string _owner_version;
             source_package_info _info;
+            source_package_version_info _current_version;
             std::vector<std::string> _files;
         };
 

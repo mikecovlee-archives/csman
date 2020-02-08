@@ -100,11 +100,13 @@ namespace local_package_impl {
     // <root-dir>/versions/<version-name>/packages/<package-name>/info.json
     // {
     //     "info": { source_package_info },
+    //     "current": { source_package_version_info },
     //     "files": [ "bin/cs", "bin/cs_dbg", ... ]
     // }
     constexpr const char *PKG_FILE = "info.json";
 
     constexpr const char *KEY_INFO = "info";
+    constexpr const char *KEY_CURRENT = "current";
     constexpr const char *KEY_FILES = "files";
 
     void init(local_package &lp, const std::string &path, const std::string &owner_version) {
@@ -125,6 +127,7 @@ namespace local_package_impl {
             sp<Json::Value> root = load_json_stream(stream);
             auto &value = *root;
             auto &info = value[KEY_INFO];
+            auto &current = value[KEY_CURRENT];
             auto &files = value[KEY_FILES];
 
             if (!info.isObject() || !files.isArray()) {
@@ -134,6 +137,9 @@ namespace local_package_impl {
 
             // parse package info from source
             parse_package(lp._info, info);
+
+            // parse current version info
+            parse_package_version(lp._current_version, current);
 
             // parse local file list
             for (auto &f : files) {
@@ -147,6 +153,7 @@ namespace local_package_impl {
     void store(local_package &lp) {
         Json::Value root;
         root[KEY_INFO] = jsonify(lp._info);
+        root[KEY_CURRENT] = jsonify(lp._current_version);
 
         auto &files = root[KEY_FILES];
         int i = 0;

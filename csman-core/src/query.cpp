@@ -98,15 +98,7 @@ namespace csman {
             check_valid_operation();
 
             auto &&platform = requires_platform();
-            auto &&version = optional_current_version();
             std::vector<source_package> result;
-
-            // if current version was set
-            // we only search in current version.
-            // otherwise, we search in all versions,
-            // in case that the user wants to know which version
-            // has his/her wanted package.
-            bool all_version = !version.has_value();
 
             // search each source
             for (auto &source : _core->_source_dir._sources) {
@@ -119,55 +111,15 @@ namespace csman {
                 }
 
                 auto &platform_info = it->second;
-                for (auto &ver : platform_info._versions) {
-                    if (!all_version && ver.first != version.get()) {
-                        // if the user doesn't want query in all versions,
-                        // and we are not in the current version,
-                        // just skip and try next.
-                        continue;
-                    }
-
-                    // enumerate each package
-                    for (auto &pkg : ver.second._packages) {
-                        int rate = 0;
-                        auto &info = pkg.second;
-                        if (package_matches(text, info._name, info._display_name, &rate)) {
-                            source_package r;
-                            r._owner_version = ver.first;
-                            r._package = pkg.second;
-                            r._match_rate = rate;
-                            result.push_back(r);
-                        }
-                    }
-                }
-            }
-
-            return std::move(result);
-        }
-
-        std::vector<source_version> operation::query_version(const std::string &text) {
-            check_valid_operation();
-
-            auto &&platform = requires_platform();
-            std::vector<source_version> result;
-
-            bool all_version = string_ref("all").equals_ignore_case(text);
-
-            for (auto &source : _core->_source_dir._sources) {
-                auto it = source._platforms.find(platform);
-                if (it == source._platforms.end()) {
-                    // try next source
-                    continue;
-                }
-
-                auto &platform_info = it->second;
-                for (auto &ver : platform_info._versions) {
+                // enumerate each package
+                for (auto &pkg : platform_info._packages) {
                     int rate = 0;
-                    if (all_version || version_matches(text, ver.second._name, &rate)) {
-                        source_version sv;
-                        sv._match_rate = rate;
-                        sv._version = ver.second;
-                        result.push_back(sv);
+                    auto &info = pkg.second;
+                    if (package_matches(text, info._name, info._display_name, &rate)) {
+                        source_package r;
+                        r._package = pkg.second;
+                        r._match_rate = rate;
+                        result.push_back(r);
                     }
                 }
             }
@@ -223,12 +175,11 @@ namespace csman {
         }
 
         bool operation::package_installed(const source_package &pkg) {
-            auto &&locals = query_installed_package(pkg._owner_version,
-                pkg._package._name);
+            auto &&locals = query_installed_package(pkg._package._name);
             for (auto &p : locals) {
                 if (p._info._name == pkg._package._name
-                    && p._info._full_name == pkg._package._full_name
-                    && p._info._version == pkg._package._version) {
+                    && p._info._full_name == pkg._package._full_name) {
+                    // TODO: check version
                     return true;
                 }
             }

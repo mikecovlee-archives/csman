@@ -26,6 +26,8 @@ namespace csman {
                     return "CSP";
                 case source_content_type::ZIP:
                     return "ZIP";
+                case source_content_type::DOC:
+                    return "DOC";
             }
         }
 
@@ -39,13 +41,11 @@ namespace csman {
             return std::move(node);
         }
 
-        Json::Value jsonify(const source_package_info &info) {
+        Json::Value jsonify(const source_package_version_info &info) {
             Json::Value node;
-            node[KEY_NAME] = info._display_name;
-            node[KEY_PNAME] = info._name;
-            node[KEY_PFNAME] = info._full_name;
+            node[KEY_NAME] = info._name;
+            node[KEY_PNAME] = info._owner_package;
             node[KEY_BASE_URL] = info._base_url;
-            node[KEY_VERSION] = info._version;
 
             auto &deps = node[KEY_DEPS];
             for (auto &dep : info._deps) {
@@ -61,27 +61,12 @@ namespace csman {
             return std::move(node);
         }
 
-        Json::Value jsonify(const source_version_info &info) {
+        Json::Value jsonify(const source_package_info &info) {
             Json::Value node;
-            node[KEY_NAME] = info._name;
+            node[KEY_NAME] = info._display_name;
+            node[KEY_PNAME] = info._name;
+            node[KEY_PFNAME] = info._full_name;
             node[KEY_BASE_URL] = info._base_url;
-            node[KEY_RTM] = info._package_rtm;
-            node[KEY_DEV] = info._package_dev;
-
-            auto &pkgs = node[KEY_PKG];
-            int i = 0;
-            for (auto &pkg : info._packages) {
-                pkgs[i++] = jsonify(pkg.second);
-            }
-
-            return std::move(node);
-        }
-
-        Json::Value jsonify(const source_platform_info &info) {
-            Json::Value node;
-            node[KEY_NAME] = info._name;
-            node[KEY_BASE_URL] = info._base_url;
-            node[KEY_VERSION] = info._version_default;
             node[KEY_LATEST] = info._version_latest;
             node[KEY_NIGHTLY] = info._version_nightly;
 
@@ -90,6 +75,21 @@ namespace csman {
             for (auto &version : info._versions) {
                 versions[i++] = jsonify(version.second);
             }
+            return std::move(node);
+        }
+
+        Json::Value jsonify(const source_platform_info &info) {
+            Json::Value node;
+            node[KEY_NAME] = info._name;
+            node[KEY_BASE_URL] = info._base_url;
+            node[KEY_RTM] = info._package_rtm;
+            node[KEY_DEV] = info._package_dev;
+
+            auto &pkgs = node[KEY_PKG];
+            for (auto &p : info._packages) {
+                pkgs[p.first] = jsonify(p.second);
+            }
+
             return std::move(node);
         }
 
@@ -161,7 +161,9 @@ namespace csman {
             } else if (type.equals_ignore_case("BIN")) {
                 return source_content_type::BIN;
             } else if (type.equals_ignore_case("DLL")) {
-                return source_content_type ::DLL;
+                return source_content_type::DLL;
+            } else if (type.equals_ignore_case("DOC")) {
+                return source_content_type::DOC;
             }
 
             return source_content_type::UNKNOWN;
@@ -254,30 +256,74 @@ namespace csman {
             }
         }
 
-        // example csman.json
+        // example csman.json:
         // {
-        //    "Name": "Official Build System for CovScript",
-        //    "Version": "3.3.3.7",
+        //    "Name": "Official Develop Package",
         //    "Dependencies": {
-        //        "cs.runtime": "3.3.3.7",
-        //        "cs.develop": "3.3.3.7"
+        //        "cs.runtime": "3.3.3.7"
         //    },
         //    "Contents": [
         //        [
-        //            "BIN",
-        //            "csbuild"
+        //            "ZIP",
+        //            "contents.zip",
+        //            {
+        //                "HEADER": "include",
+        //                "LIB": "lib"
+        //            }
         //        ]
         //    ]
         // }
-        void parse_package(source_package_info &info, Json::Value &value) {
+        void parse_package_version(source_package_version_info &info, Json::Value &value) {
             auto &deps = value[KEY_DEPS];
             auto &contents = value[KEY_CONTENTS];
 
             if (!contents.isArray()) {
-                throw_ex("syntax error(package: " + info._full_name
-                         + "): Contents entry should be an array");
+                throw_ex("syntax error(package " + info._owner_package
+                         + "(" + info._name + "): Contents entry should be an array");
             }
 
+            // rewrite base url if source defined
+            if (!value[KEY_BASE_URL].asString().empty()) {
+                info._base_url = value[KEY_BASE_URL].asString();
+            }
+
+            // ignore name
+
+            // parse contents
+            for (auto &content : contents) {
+                if (!content.isArray()) {
+                    throw_ex("syntax error(package " + info._owner_package
+                             + "(" + info._name + "): Contents elements should be arrays");
+                }
+
+                source_content_info content_info;
+                parse_content(content_info, content);
+                info._contents.push_back(content_info);
+            }
+
+            // only load dependency names and versions,
+            // resolve relationship between them is not parser's case.
+            for (auto &name : deps.getMemberNames()) {
+                info._deps.emplace(name, deps[name].asString());
+            }
+        }
+
+        void parse_package_version(source_package_version_info &info, const std::string &json) {
+            sp<Json::Value> root = load_json(json);
+            auto &value = *root.get();
+            parse_package_version(info, value);
+        }
+
+        // example csman.json
+        // {
+        //    "Name": "A fucker",
+        //    "Version": [
+        //        "3.3.3.7"
+        //    ],
+        //    "Latest": "3.3.3.7",
+        //    "Nightly": "3.3.3.7"
+        // }
+        void parse_package(source_package_info &info, Json::Value &value) {
             // rewrite base url if source defined
             if (!value[KEY_BASE_URL].asString().empty()) {
                 info._base_url = value[KEY_BASE_URL].asString();
@@ -296,24 +342,61 @@ namespace csman {
             }
 
             info._display_name = value[KEY_NAME].asString();
-            info._version = value[KEY_VERSION].asString();
+            info._version_latest = value[KEY_LATEST].asString();
+            info._version_nightly = value[KEY_NIGHTLY].asCString();
 
-            // parse contents
-            for (auto &content : contents) {
-                if (!content.isArray()) {
-                    throw_ex("syntax error(package: " + info._name
-                             + "): Contents elements should be arrays");
+            if (value.isMember(KEY_VERSIONS)) {
+                // source has inline version list
+                auto &versions = value[KEY_VERSIONS];
+                for (auto &version : versions) {
+                    source_package_version_info version_info{};
+                    parse_package_version(version_info, version);
+                    if (version_info._name.empty()
+                        || version_info._owner_package.empty()) {
+                        throw_ex("syntax error(package, version): "
+                                 "inline object should contain a version and owner package");
+                    }
+
+                    // inherit base url
+                    if (version_info._base_url.empty()) {
+                        version_info._base_url = info._base_url + "/" + version_info._name;
+                    }
+
+                    // put loaded inline object
+                    info._versions.emplace(version_info._name, version_info);
                 }
 
-                source_content_info content_info;
-                parse_content(content_info, content);
-                info._contents.push_back(content_info);
-            }
+            } else {
+                // source doesn't have inline version list
 
-            // only load dependency names and versions,
-            // resolve relationship between them is not parser's case.
-            for (auto &name : deps.getMemberNames()) {
-                info._deps.emplace(name, deps[name].asString());
+                // remove duplicated version names,
+                // so the same version will be parsed only once.
+                std::set<std::string> version_names{
+                    info._version_latest,
+                    info._version_nightly
+                };
+
+                for (auto &ver_name : version_names) {
+                    std::string version_url = info._base_url + "/" + ver_name;
+                    std::string version_info_url = version_url + "/" + INFO_FILE;
+
+                    // request csman.json for every version
+                    std::string version_json;
+                    if (!network::get_url_text(version_info_url, version_json)) {
+                        throw_ex("Failed to get file: " + version_info_url);
+                    }
+
+                    // parse it!
+                    source_package_version_info version_info;
+                    // Inherit default base url
+                    version_info._base_url = version_url;
+                    version_info._name = ver_name;
+                    version_info._owner_package = info._name;
+                    parse_package_version(version_info, version_json);
+
+                    // put parsed version into platform config
+                    info._versions.emplace(ver_name, version_info);
+                }
             }
         }
 
@@ -329,7 +412,6 @@ namespace csman {
         //    "DEV": "cs.develop",
         //    "PKG": [
         //        "cics.codec",
-        //        "cics.csbuild",
         //        "cics.darwin",
         //        "cics.imgui",
         //        "cics.network",
@@ -338,11 +420,11 @@ namespace csman {
         //        "cics.streams"
         //    ]
         // }
-        void parse_version(source_version_info &info, Json::Value &value) {
+        void parse_platform(source_platform_info &info, Json::Value &value) {
             auto &pkgs = value[KEY_PKG];
 
             if (!pkgs.isArray()) {
-                throw_ex("syntax error(version: " + info._name
+                throw_ex("syntax error(platform: " + info._name
                          + "): PKG entry should be an array");
             }
 
@@ -426,86 +508,6 @@ namespace csman {
             }
         }
 
-        void parse_version(source_version_info &info, const std::string &json) {
-            sp<Json::Value> root = load_json(json);
-            auto &value = *root.get();
-            parse_version(info, value);
-        }
-
-        // example csman.json:
-        // {
-        //    "Version": "3.3.3.7",
-        //    "Latest": "3.3.3.7",
-        //    "Nightly": "3.3.3.7"
-        // }
-        void parse_platform(source_platform_info &info, Json::Value &value) {
-            // rewrite base url if source defined
-            if (!value[KEY_BASE_URL].asString().empty()) {
-                info._base_url = value[KEY_BASE_URL].asString();
-            }
-
-            // rewrite name if source defined
-            if (!value[KEY_NAME].asString().empty()) {
-                info._name = value[KEY_NAME].asString();
-            }
-
-            info._version_default = value[KEY_VERSION].asString();
-            info._version_latest = value[KEY_LATEST].asString();
-            info._version_nightly = value[KEY_NIGHTLY].asString();
-
-            if (value.isMember(KEY_VERSIONS)) {
-                // source has inline version list
-                auto &versions = value[KEY_VERSIONS];
-                for (auto &version : versions) {
-                    source_version_info version_info{};
-                    parse_version(version_info, version);
-                    if (version_info._name.empty()) {
-                        throw_ex("syntax error(version): inline object should contain a name");
-                    }
-
-                    // inherit base url
-                    if (version_info._base_url.empty()) {
-                        version_info._base_url = info._base_url + "/" + version_info._name;
-                    }
-
-                    // put loaded inline object
-                    info._versions.emplace(version_info._name, version_info);
-                }
-
-            } else {
-                // source doesn't have version list
-
-                // remove duplicated version names,
-                // so the same version will be parsed only once.
-                std::set<std::string> names{
-                    info._version_default,
-                    info._version_latest,
-                    info._version_nightly
-                };
-
-                for (auto &name : names) {
-                    std::string version_url = info._base_url + "/" + name;
-                    std::string version_info_url = version_url + "/" + INFO_FILE;
-
-                    // request csman.json for every version
-                    std::string version_json;
-                    if (!network::get_url_text(version_info_url, version_json)) {
-                        throw_ex("Failed to get file: " + version_info_url);
-                    }
-
-                    // parse it!
-                    source_version_info version_info;
-                    // Inherit default base url
-                    version_info._base_url = version_url;
-                    version_info._name = name;
-                    parse_version(version_info, version_json);
-
-                    // put parsed version into platform config
-                    info._versions.emplace(name, version_info);
-                }
-            }
-        }
-
         void parse_platform(source_platform_info &info, const std::string &json) {
             sp<Json::Value> root = load_json(json);
             auto &value = *root.get();
@@ -516,9 +518,8 @@ namespace csman {
         // {
         //    "BaseUrl": "http://mirrors.covariant.cn/csman/",
         //    "Platform": [
+        //        "Generic",
         //        "Linux_GCC_AMD64",
-        //        "Win32_MinGW-w64_i386",
-        //        "Win32_MinGW-w64_AMD64"
         //    ]
         // }
         void parse_root(source_root_info &info, Json::Value &value) {

@@ -37,17 +37,17 @@ namespace csman {
 
         void parse_content(source_content_info &info, Json::Value &value);
 
-        void parse_package(source_package_info &info, Json::Value &value);
+        void parse_package_version(source_package_version_info &info, Json::Value &value);
 
-        void parse_version(source_version_info &info, Json::Value &value);
+        void parse_package(source_package_info &info, Json::Value &value);
 
         void parse_platform(source_platform_info &info, Json::Value &value);
 
         void parse_root(source_root_info &info, Json::Value &value);
 
-        void parse_package(source_package_info &info, const std::string &json);
+        void parse_package_version(source_package_version_info &info, const std::string &json) ;
 
-        void parse_version(source_version_info &info, const std::string &json) ;
+        void parse_package(source_package_info &info, const std::string &json);
 
         void parse_platform(source_platform_info &info, const std::string &json);
 
@@ -59,7 +59,7 @@ namespace csman {
 
         Json::Value jsonify(const source_package_info &info);
 
-        Json::Value jsonify(const source_version_info &info);
+        Json::Value jsonify(const source_package_version_info &info);
 
         Json::Value jsonify(const source_platform_info &info);
 

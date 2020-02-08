@@ -17,13 +17,7 @@ namespace csman {
 
         struct source_package {
             int _match_rate;
-            std::string _owner_version;
             source_package_info _package;
-        };
-
-        struct source_version {
-            int _match_rate;
-            source_version_info _version;
         };
 
         class operation {
@@ -54,7 +48,6 @@ namespace csman {
             std::vector<std::string> query_sources();
 
             std::vector<source_package> query_package(const std::string &text);
-            std::vector<source_version> query_version(const std::string &text);
 
             std::vector<local_package> query_installed_package(const std::string &text);
             std::vector<local_package> query_installed_package(const std::string &version,
@@ -77,15 +70,6 @@ namespace csman {
              *   rv-progress(int progress)
              */
             void remove_version(mpp::event_emitter &ev, local_version &version);
-
-            /**
-             * Event:
-             *   ip-error(const std::string &reason)
-             *   ip-ok()
-             *   ip-progress(int progress, const std::string &info)
-             *   ip-net-progress(int progress)
-             */
-            void install_version(mpp::event_emitter &ev, source_version &version);
 
             /**
              * Event:

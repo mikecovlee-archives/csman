@@ -96,4 +96,5 @@ The man behind Covariant Script who maintains all versions, packages and lots of
     - State: (Stable | Unstable | Preview) 字符串，指示版本状态
     - Dependencies: {("包名":"latest | nightly | 版本号")...}
     - Contents: {("类型(BIN(可执行文件) | DEV(源代码头文件) | LIB(库文件) | CSP(CovScript包) | CSE(CovScript扩展) | DOC(文档))":"文件名 | 目录名")...}
+    - ContentUrl: 字符串，可选，指定contents.zip的存放地址
 - contents.zip: 压缩包，内容需符合csman.json的描述

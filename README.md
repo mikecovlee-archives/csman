@@ -49,13 +49,12 @@ The man behind Covariant Script who maintains all versions, packages and lots of
     - [ ] `csman config unset <key>`
     - [ ] `csman config get <key>`
 
+#### CSMAN 源地址
+- http://mirrors.covariant.cn/csman/
+- http://install.covscript.org.cn/
+- http://dist.csman.info/
 
-#### CovScript 源定义
-源地址:
-+ http://mirrors.covariant.cn/csman/
-+ http://install.covscript.org.cn/
-+ http://dist.csman.info/
-
+#### CSMAN 源定义
 - 根目录
     - csman.json
         - Version: 字符串，标示CSMAN标准版本
@@ -75,9 +74,9 @@ The man behind Covariant Script who maintains all versions, packages and lots of
                 - RTM: 字符串，标示运行时环境的包名，一般为`cs.runtime`
                 - DEV: 字符串，标示开发环境的包名，一般为`cs.develop`
             - runtime: 发行包(.csrtm)
-                - CSMAN包标准格式
+                - CSMAN 包格式
             - develop: 开发包(.csdev)
-                - CSMAN包标准格式
+                - CSMAN 包格式
         - 标准版本号(`STD_XXXXXX`，如`STD_200201`) 或 二进制版本号(`ABI_XXXXXX`，如`ABI_200201`)
             - csman.json
                 - PKG: ["包名"...]
@@ -90,9 +89,9 @@ The man behind Covariant Script who maintains all versions, packages and lots of
                     - Latest: [Version]
                     - Nightly: [Version]
                 - 版本号
-                    - CSMAN包标准格式
+                    - CSMAN 包格式
                     
-#### CSMAN包标准格式
+#### CSMAN 包格式
 - csman.json
     - State: (Stable | Unstable | Preview) 字符串，指示版本状态
     - Dependencies: {("包名":"latest | nightly | 版本号")...}
